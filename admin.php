@@ -1,3 +1,4 @@
+
 <?php
 session_start();
 require_once "db.php";
@@ -39,6 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
             $stmt->close();
         }
+
     } elseif ($action === "login") {
         $username = trim($_POST["username"] ?? "");
         $password = $_POST["password"] ?? "";
@@ -58,6 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             $error = "Incorrect admin username or password.";
         }
+
     } elseif ($action === "update_status" && isset($_SESSION["admin_id"])) {
         $bookingId = filter_var($_POST["booking_id"] ?? "", FILTER_VALIDATE_INT);
         $status = $_POST["booking_status"] ?? "";
@@ -68,23 +71,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmt->bind_param("si", $status, $bookingId);
             $stmt->execute();
             $stmt->close();
+
             header("Location: admin.php?updated=1");
             exit;
+        }
+
+    } elseif ($action === "delete_booking" && isset($_SESSION["admin_id"])) {
+        $bookingId = filter_var($_POST["booking_id"] ?? "", FILTER_VALIDATE_INT);
+
+        if ($bookingId && $bookingId > 0) {
+            $stmt = $conn->prepare("DELETE FROM bookings WHERE booking_id = ?");
+            $stmt->bind_param("i", $bookingId);
+
+            if ($stmt->execute() && $stmt->affected_rows > 0) {
+                $stmt->close();
+                header("Location: admin.php?deleted=1");
+                exit;
+            } else {
+                $error = "Unable to delete booking. Please try again.";
+            }
+
+            $stmt->close();
+        } else {
+            $error = "Invalid booking ID.";
         }
     }
 }
 
 if (isset($_SESSION["admin_id"])) {
-    if (isset($_GET["updated"])) $success = "Booking status updated.";
+    if (isset($_GET["updated"])) {
+        $success = "Booking status updated.";
+    }
+
+    if (isset($_GET["deleted"])) {
+        $success = "Booking successfully deleted.";
+    }
+
     $sql = "SELECT b.booking_id, b.event_type, b.venue_area, b.event_date, b.event_time,
                    b.guest_count, b.package_name, b.booking_status, b.payment_status,
                    c.full_name, c.email, c.phone
             FROM bookings b
             INNER JOIN customers c ON b.customer_id = c.customer_id
             ORDER BY b.booking_id DESC";
+
     $bookings = $conn->query($sql);
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -92,104 +125,236 @@ if (isset($_SESSION["admin_id"])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golden Moments | Admin</title>
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .admin-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-actions form {
+            margin: 0;
+        }
+
+        .delete-btn {
+            background-color: #c94343;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #a83232;
+        }
+    </style>
 </head>
+
 <body>
+
 <header class="site-header">
     <a class="brand" href="admin.php">Golden <span>Moments</span></a>
+
     <?php if (isset($_SESSION["admin_id"])): ?>
         <nav class="nav-links">
-            <span class="welcome-user">Admin: <?= e($_SESSION["admin_username"]) ?></span>
+            <span class="welcome-user">
+                Admin: <?= e($_SESSION["admin_username"]) ?>
+            </span>
             <a class="btn outline small" href="admin.php?logout=1">Log out</a>
         </nav>
     <?php endif; ?>
 </header>
 
 <main class="page-wrap">
+
 <?php if (!isset($_SESSION["admin_id"])): ?>
+
     <section class="auth-card admin-card">
         <p class="eyebrow">ADMIN AREA</p>
+
         <?php if ($adminCount === 0): ?>
+
             <h1>Create first admin</h1>
             <p class="muted">No admin account exists yet. Create the first one to protect the dashboard.</p>
+
             <form method="POST" class="auth-form show">
                 <input type="hidden" name="action" value="create_admin">
+
                 <label>Admin username</label>
                 <input type="text" name="username" maxlength="100" required>
+
                 <label>Password</label>
                 <input type="password" name="password" minlength="8" required>
-                <button class="btn primary full" type="submit">Create admin account</button>
+
+                <button class="btn primary full" type="submit">
+                    Create admin account
+                </button>
             </form>
+
         <?php else: ?>
+
             <h1>Admin login</h1>
             <p class="muted">Log in to manage customer bookings.</p>
+
             <form method="POST" class="auth-form show">
                 <input type="hidden" name="action" value="login">
+
                 <label>Username</label>
                 <input type="text" name="username" required>
+
                 <label>Password</label>
                 <input type="password" name="password" required>
-                <button class="btn primary full" type="submit">Log in</button>
+
+                <button class="btn primary full" type="submit">
+                    Log in
+                </button>
             </form>
+
         <?php endif; ?>
-        <?php if ($error !== ""): ?><div class="alert error"><?= e($error) ?></div><?php endif; ?>
-        <?php if ($success !== ""): ?><div class="alert success"><?= e($success) ?></div><?php endif; ?>
-        <p class="form-switch"><a href="index.php">Back to customer website</a></p>
+
+        <?php if ($error !== ""): ?>
+            <div class="alert error"><?= e($error) ?></div>
+        <?php endif; ?>
+
+        <?php if ($success !== ""): ?>
+            <div class="alert success"><?= e($success) ?></div>
+        <?php endif; ?>
+
+        <p class="form-switch">
+            <a href="index.php">Back to customer website</a>
+        </p>
     </section>
+
 <?php else: ?>
+
     <section class="page-heading">
         <p class="eyebrow">MANAGEMENT</p>
         <h1>Booking <span>dashboard</span></h1>
         <p>Review customer requests and update their booking status.</p>
     </section>
-    <?php if ($success !== ""): ?><div class="alert success"><?= e($success) ?></div><?php endif; ?>
+
+    <?php if ($success !== ""): ?>
+        <div class="alert success"><?= e($success) ?></div>
+    <?php endif; ?>
+
+    <?php if ($error !== ""): ?>
+        <div class="alert error"><?= e($error) ?></div>
+    <?php endif; ?>
+
     <section class="content-card">
         <h2>All bookings</h2>
+
         <?php if ($bookings->num_rows === 0): ?>
+
             <p class="muted">No bookings have been submitted yet.</p>
+
         <?php else: ?>
+
         <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Customer</th>
-                    <th>Contact</th>
-                    <th>Event details</th>
-                    <th>Date & time</th>
-                    <th>Guests</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php while ($row = $bookings->fetch_assoc()): ?>
-                <tr>
-                    <td><?= e($row["full_name"]) ?></td>
-                    <td><?= e($row["email"]) ?><small><?= e($row["phone"] ?: "No phone") ?></small></td>
-                    <td><?= e($row["event_type"]) ?><small><?= e($row["venue_area"]) ?> - <?= e($row["package_name"] ?: "No package") ?></small></td>
-                    <td><?= e($row["event_date"]) ?><small><?= e(date("g:i A", strtotime($row["event_time"]))) ?></small></td>
-                    <td><?= e($row["guest_count"]) ?></td>
-                    <td><?= e($row["payment_status"] ?: "Unpaid") ?></td>
-                    <td>
-                        <form method="POST" class="status-form">
-                            <input type="hidden" name="action" value="update_status">
-                            <input type="hidden" name="booking_id" value="<?= (int)$row["booking_id"] ?>">
-                            <select name="booking_status">
-                                <?php foreach (["Pending", "Approved", "Rejected", "Completed"] as $status): ?>
-                                    <option value="<?= e($status) ?>" <?= ($row["booking_status"] === $status ? "selected" : "") ?>><?= e($status) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <button class="btn primary small" type="submit">Save</button>
-                        </form>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-            </tbody>
-        </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Event details</th>
+                        <th>Date & time</th>
+                        <th>Guests</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                <?php while ($row = $bookings->fetch_assoc()): ?>
+
+                    <tr>
+                        <td><?= e($row["full_name"]) ?></td>
+
+                        <td>
+                            <?= e($row["email"]) ?>
+                            <small><?= e($row["phone"] ?: "No phone") ?></small>
+                        </td>
+
+                        <td>
+                            <?= e($row["event_type"]) ?>
+                            <small>
+                                <?= e($row["venue_area"]) ?> -
+                                <?= e($row["package_name"] ?: "No package") ?>
+                            </small>
+                        </td>
+
+                        <td>
+                            <?= e($row["event_date"]) ?>
+                            <small>
+                                <?= e(date("g:i A", strtotime($row["event_time"]))) ?>
+                            </small>
+                        </td>
+
+                        <td><?= e($row["guest_count"]) ?></td>
+
+                        <td><?= e($row["payment_status"] ?: "Unpaid") ?></td>
+
+                        <td>
+                            <form method="POST" class="status-form">
+                                <input type="hidden" name="action" value="update_status">
+
+                                <input type="hidden" name="booking_id"
+                                       value="<?= (int)$row["booking_id"] ?>">
+
+                                <select name="booking_status">
+                                    <?php foreach (["Pending", "Approved", "Rejected", "Completed"] as $status): ?>
+                                        <option value="<?= e($status) ?>"
+                                            <?= ($row["booking_status"] === $status ? "selected" : "") ?>>
+                                            <?= e($status) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+
+                                <button class="btn primary small" type="submit">
+                                    Save
+                                </button>
+                            </form>
+                        </td>
+
+                        <td>
+                            <div class="admin-actions">
+
+                                <form method="POST"
+                                      onsubmit="return confirm('Are you sure you want to delete this booking? This action cannot be undone.');">
+
+                                    <input type="hidden" name="action" value="delete_booking">
+
+                                    <input type="hidden" name="booking_id"
+                                           value="<?= (int)$row["booking_id"] ?>">
+
+                                    <button class="btn delete-btn small" type="submit">
+                                        Delete
+                                    </button>
+                                </form>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                <?php endwhile; ?>
+
+                </tbody>
+            </table>
         </div>
+
         <?php endif; ?>
     </section>
+
 <?php endif; ?>
+
 </main>
-<footer class="site-footer">Golden Moments &bull; Admin Panel</footer>
+
+<footer class="site-footer">
+    Golden Moments &bull; Admin Panel
+</footer>
+
 </body>
 </html>
