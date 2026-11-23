@@ -45,73 +45,200 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["cancel_booking"])) {
     exit;
 }
 
-/* SUBMIT BOOKING */
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+/* UPDATE BOOKING */
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["update_booking"])) {
 
-    if (!isset($_POST["cancel_booking"])) {
+    $bookingId = (int)($_POST["booking_id"] ?? 0);
 
-        $eventType = trim($_POST["event_type"] ?? "");
-        $venueArea = trim($_POST["venue_area"] ?? "");
-        $eventDate = $_POST["event_date"] ?? "";
-        $eventTime = $_POST["event_time"] ?? "";
-        $guestCount = filter_var($_POST["guest_count"] ?? "", FILTER_VALIDATE_INT);
-        $packageName = trim($_POST["package_name"] ?? "");
+    $eventType = trim($_POST["event_type"] ?? "");
+    $venueArea = trim($_POST["venue_area"] ?? "");
+    $eventDate = $_POST["event_date"] ?? "";
+    $eventTime = $_POST["event_time"] ?? "";
+    $guestCount = filter_var($_POST["guest_count"] ?? "", FILTER_VALIDATE_INT);
+    $packageName = trim($_POST["package_name"] ?? "");
 
-        if ($eventType === "" || $venueArea === "" || $eventDate === "" || $eventTime === "" || !$guestCount || $guestCount < 1 || $packageName === "") {
-            $_SESSION["flash_message"] = "Mangyaring punan ang lahat ng kinakailangang impormasyon.";
-            $_SESSION["flash_type"] = "error";
+    if (
+        $bookingId <= 0 ||
+        $eventType === "" ||
+        $venueArea === "" ||
+        $eventDate === "" ||
+        $eventTime === "" ||
+        !$guestCount ||
+        $guestCount < 1 ||
+        $packageName === ""
+    ) {
 
-        } elseif ($eventDate < date("Y-m-d")) {
-            $_SESSION["flash_message"] = "Mangyaring pumili ng petsa ngayon o sa hinaharap.";
+        $_SESSION["flash_message"] = "Mangyaring punan ang lahat ng kinakailangang impormasyon.";
+        $_SESSION["flash_type"] = "error";
+
+    } elseif ($eventDate < date("Y-m-d")) {
+
+        $_SESSION["flash_message"] = "Mangyaring pumili ng petsa ngayon o sa hinaharap.";
+        $_SESSION["flash_type"] = "error";
+
+    } else {
+
+        // CHECK IF BOOKING BELONGS TO CUSTOMER
+        $ownerStmt = $conn->prepare(
+            "SELECT booking_id FROM bookings
+             WHERE booking_id = ?
+             AND customer_id = ?
+             AND booking_status NOT IN ('Cancelled', 'Rejected')"
+        );
+
+        $ownerStmt->bind_param("ii", $bookingId, $customerId);
+        $ownerStmt->execute();
+        $ownerStmt->store_result();
+
+        if ($ownerStmt->num_rows === 0) {
+
+            $_SESSION["flash_message"] = "Hindi ma-update ang booking na ito.";
             $_SESSION["flash_type"] = "error";
 
         } else {
 
-            // CHECK DOUBLE BOOKING
+            // CHECK VENUE AVAILABILITY
             $checkStmt = $conn->prepare(
                 "SELECT booking_id FROM bookings
                  WHERE venue_area = ?
                  AND event_date = ?
                  AND event_time = ?
+                 AND booking_id != ?
                  AND booking_status NOT IN ('Cancelled', 'Rejected')"
             );
 
-            $checkStmt->bind_param("sss", $venueArea, $eventDate, $eventTime);
+            $checkStmt->bind_param(
+                "sssi",
+                $venueArea,
+                $eventDate,
+                $eventTime,
+                $bookingId
+            );
+
             $checkStmt->execute();
             $checkStmt->store_result();
 
             if ($checkStmt->num_rows > 0) {
 
-                $_SESSION["flash_message"] = "Paumanhin, ang venue area na ito ay na-book na sa napiling petsa at oras. Mangyaring pumili ng ibang oras o araw.";
+                $_SESSION["flash_message"] = "Paumanhin, ang venue area na ito ay na-book na sa napiling petsa at oras.";
                 $_SESSION["flash_type"] = "error";
 
             } else {
 
-                $stmt = $conn->prepare(
-                    "INSERT INTO bookings
-                    (customer_id, event_type, venue_area, event_date, event_time, guest_count, package_name, booking_status, payment_status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', 'Unpaid')"
+                $updateStmt = $conn->prepare(
+                    "UPDATE bookings
+                     SET event_type = ?,
+                         venue_area = ?,
+                         event_date = ?,
+                         event_time = ?,
+                         guest_count = ?,
+                         package_name = ?
+                     WHERE booking_id = ?
+                     AND customer_id = ?
+                     AND booking_status NOT IN ('Cancelled', 'Rejected')"
                 );
 
-                $stmt->bind_param("issssis", $customerId, $eventType, $venueArea, $eventDate, $eventTime, $guestCount, $packageName);
+                $updateStmt->bind_param(
+                    "ssss isii",
+                    $eventType,
+                    $venueArea,
+                    $eventDate,
+                    $eventTime,
+                    $guestCount,
+                    $packageName,
+                    $bookingId,
+                    $customerId
+                );
 
-                if ($stmt->execute()) {
-                    $_SESSION["flash_message"] = "Matagumpay na naisumite ang reservation! Magbayad ng down payment sa tanggapan ng CED Event & Catering Services.";
+                if ($updateStmt->execute()) {
+
+                    $_SESSION["flash_message"] = "Matagumpay na na-update ang iyong booking!";
                     $_SESSION["flash_type"] = "success";
+
                 } else {
-                    $_SESSION["flash_message"] = "Nabigong i-save ang booking. Subukan muli.";
+
+                    $_SESSION["flash_message"] = "Nabigong i-update ang booking. Subukan muli.";
                     $_SESSION["flash_type"] = "error";
                 }
 
-                $stmt->close();
+                $updateStmt->close();
             }
 
             $checkStmt->close();
         }
 
-        header("Location: booking.php");
-        exit;
+        $ownerStmt->close();
     }
+
+    header("Location: booking.php");
+    exit;
+}
+
+/* SUBMIT BOOKING */
+if ($_SERVER["REQUEST_METHOD"] === "POST" && !isset($_POST["cancel_booking"]) && !isset($_POST["update_booking"])) {
+
+    $eventType = trim($_POST["event_type"] ?? "");
+    $venueArea = trim($_POST["venue_area"] ?? "");
+    $eventDate = $_POST["event_date"] ?? "";
+    $eventTime = $_POST["event_time"] ?? "";
+    $guestCount = filter_var($_POST["guest_count"] ?? "", FILTER_VALIDATE_INT);
+    $packageName = trim($_POST["package_name"] ?? "");
+
+    if ($eventType === "" || $venueArea === "" || $eventDate === "" || $eventTime === "" || !$guestCount || $guestCount < 1 || $packageName === "") {
+
+        $_SESSION["flash_message"] = "Mangyaring punan ang lahat ng kinakailangang impormasyon.";
+        $_SESSION["flash_type"] = "error";
+
+    } elseif ($eventDate < date("Y-m-d")) {
+
+        $_SESSION["flash_message"] = "Mangyaring pumili ng petsa ngayon o sa hinaharap.";
+        $_SESSION["flash_type"] = "error";
+
+    } else {
+
+        $checkStmt = $conn->prepare(
+            "SELECT booking_id FROM bookings
+             WHERE venue_area = ?
+             AND event_date = ?
+             AND event_time = ?
+             AND booking_status NOT IN ('Cancelled', 'Rejected')"
+        );
+
+        $checkStmt->bind_param("sss", $venueArea, $eventDate, $eventTime);
+        $checkStmt->execute();
+        $checkStmt->store_result();
+
+        if ($checkStmt->num_rows > 0) {
+
+            $_SESSION["flash_message"] = "Paumanhin, ang venue area na ito ay na-book na sa napiling petsa at oras.";
+            $_SESSION["flash_type"] = "error";
+
+        } else {
+
+            $stmt = $conn->prepare(
+                "INSERT INTO bookings
+                (customer_id, event_type, venue_area, event_date, event_time, guest_count, package_name, booking_status, payment_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', 'Unpaid')"
+            );
+
+            $stmt->bind_param("issssis", $customerId, $eventType, $venueArea, $eventDate, $eventTime, $guestCount, $packageName);
+
+            if ($stmt->execute()) {
+                $_SESSION["flash_message"] = "Matagumpay na naisumite ang reservation! Magbayad ng down payment sa tanggapan ng CED Event & Catering Services.";
+                $_SESSION["flash_type"] = "success";
+            } else {
+                $_SESSION["flash_message"] = "Nabigong i-save ang booking. Subukan muli.";
+                $_SESSION["flash_type"] = "error";
+            }
+
+            $stmt->close();
+        }
+
+        $checkStmt->close();
+    }
+
+    header("Location: booking.php");
+    exit;
 }
 
 /* FLASH MESSAGE */
@@ -188,7 +315,6 @@ $bookings = $stmt->get_result();
 
                 <div>
                     <label>Event type</label>
-
                     <select name="event_type" required>
                         <option value="">Choose event type</option>
                         <option>Wedding</option>
@@ -202,7 +328,6 @@ $bookings = $stmt->get_result();
 
                 <div>
                     <label>Venue Area</label>
-
                     <select name="venue_area" required>
                         <option value="">Choose venue area</option>
                         <option value="Pool Area">Pool Area</option>
@@ -214,28 +339,21 @@ $bookings = $stmt->get_result();
 
                 <div>
                     <label>Event date</label>
-
-                    <input type="date" name="event_date"
-                        min="<?= date("Y-m-d") ?>" required>
+                    <input type="date" name="event_date" min="<?= date("Y-m-d") ?>" required>
                 </div>
 
                 <div>
                     <label>Event time</label>
-
                     <input type="time" name="event_time" required>
                 </div>
 
                 <div>
                     <label>Number of guests</label>
-
-                    <input type="number" name="guest_count"
-                        min="1" max="10000"
-                        placeholder="e.g. 100" required>
+                    <input type="number" name="guest_count" min="1" max="10000" placeholder="e.g. 100" required>
                 </div>
 
                 <div>
                     <label>Package & Cost</label>
-
                     <select name="package_name" required>
                         <option value="">Choose package</option>
                         <option value="Basic Package - ₱10,000">Basic Package - ₱10,000</option>
@@ -289,27 +407,17 @@ $bookings = $stmt->get_result();
 
                                 <td>
                                     <?= e($row["event_type"]) ?>
-
-                                    <small>
-                                        Area: <?= e($row["venue_area"]) ?>
-                                    </small>
+                                    <small>Area: <?= e($row["venue_area"]) ?></small>
                                 </td>
 
                                 <td>
                                     <?= e($row["event_date"]) ?>
-
-                                    <small>
-                                        <?= e(date("g:i A", strtotime($row["event_time"]))) ?>
-                                    </small>
+                                    <small><?= e(date("g:i A", strtotime($row["event_time"]))) ?></small>
                                 </td>
 
-                                <td>
-                                    <?= e($row["guest_count"]) ?>
-                                </td>
+                                <td><?= e($row["guest_count"]) ?></td>
 
-                                <td>
-                                    <?= e($row["package_name"] ?: "—") ?>
-                                </td>
+                                <td><?= e($row["package_name"] ?: "—") ?></td>
 
                                 <td>
                                     <span class="status">
@@ -319,7 +427,6 @@ $bookings = $stmt->get_result();
 
                                 <td>
                                     <?= e($row["payment_status"]) ?>
-
                                     <small class="muted">Pay in person</small>
                                 </td>
 
@@ -327,13 +434,28 @@ $bookings = $stmt->get_result();
 
                                     <?php if (!in_array($row["booking_status"], ["Cancelled", "Rejected"], true)): ?>
 
+                                        <!-- UPDATE BUTTON -->
+                                        <button
+                                            type="button"
+                                            class="btn primary small"
+                                            onclick="editBooking(
+                                                <?= (int)$row['booking_id'] ?>,
+                                                <?= htmlspecialchars(json_encode($row['event_type']), ENT_QUOTES, 'UTF-8') ?>,
+                                                <?= htmlspecialchars(json_encode($row['venue_area']), ENT_QUOTES, 'UTF-8') ?>,
+                                                <?= htmlspecialchars(json_encode($row['event_date']), ENT_QUOTES, 'UTF-8') ?>,
+                                                <?= htmlspecialchars(json_encode(substr($row['event_time'], 0, 5)), ENT_QUOTES, 'UTF-8') ?>,
+                                                <?= (int)$row['guest_count'] ?>,
+                                                <?= htmlspecialchars(json_encode($row['package_name']), ENT_QUOTES, 'UTF-8') ?>
+                                            )">
+                                            Update Booking
+                                        </button>
+
+                                        <!-- CANCEL BUTTON -->
                                         <form method="POST"
                                             action="booking.php"
                                             onsubmit="return confirm('Are you sure you want to cancel this booking?');">
 
-                                            <input type="hidden"
-                                                name="booking_id"
-                                                value="<?= (int)$row["booking_id"] ?>">
+                                            <input type="hidden" name="booking_id" value="<?= (int)$row["booking_id"] ?>">
 
                                             <button type="submit"
                                                 name="cancel_booking"
@@ -368,11 +490,88 @@ $bookings = $stmt->get_result();
 
 </main>
 
+<!-- UPDATE BOOKING FORM -->
+<section id="editBookingSection" class="content-card" style="display:none; max-width:900px; margin:30px auto;">
+
+    <h2>Update Booking Details</h2>
+
+    <form method="POST" action="booking.php" class="booking-form"
+        onsubmit="return confirm('Are you sure you want to save these changes?');">
+
+        <input type="hidden" name="booking_id" id="edit_booking_id">
+
+        <div class="form-grid">
+
+            <div>
+                <label>Event type</label>
+                <select name="event_type" id="edit_event_type" required>
+                    <option>Wedding</option>
+                    <option>Birthday</option>
+                    <option>Debut</option>
+                    <option>Anniversary</option>
+                    <option>Corporate Event</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Venue Area</label>
+                <select name="venue_area" id="edit_venue_area" required>
+                    <option value="Pool Area">Pool Area</option>
+                    <option value="Garden">Garden</option>
+                    <option value="Grand Ballroom">Grand Ballroom</option>
+                    <option value="Function Room">Function Room</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Event date</label>
+                <input type="date" name="event_date" id="edit_event_date"
+                    min="<?= date("Y-m-d") ?>" required>
+            </div>
+
+            <div>
+                <label>Event time</label>
+                <input type="time" name="event_time" id="edit_event_time" required>
+            </div>
+
+            <div>
+                <label>Number of guests</label>
+                <input type="number" name="guest_count" id="edit_guest_count"
+                    min="1" max="10000" required>
+            </div>
+
+            <div>
+                <label>Package & Cost</label>
+                <select name="package_name" id="edit_package_name" required>
+                    <option value="Basic Package - ₱10,000">Basic Package - ₱10,000</option>
+                    <option value="Classic Package - ₱20,000">Classic Package - ₱20,000</option>
+                    <option value="Premium Package - ₱35,000">Premium Package - ₱35,000</option>
+                    <option value="Custom Package - ₱50,000">Custom Package - ₱50,000</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button type="submit" name="update_booking" value="1" class="btn primary">
+            Save Changes
+        </button>
+
+        <button type="button" class="btn outline" onclick="closeEditBooking()">
+            Cancel
+        </button>
+
+    </form>
+
+</section>
+
 <footer class="site-footer">
     © <?= date("Y") ?> CED Event & Catering Services — In-person payment policy applies.
 </footer>
 
-</body>
-</html>
+<script>
+function editBooking(id, eventType, venueArea, eventDate, eventTime, guestCount, packageName) {
 
-<?php $stmt->close(); ?>
+    document.getElementById("edit_booking_id").value = id;
+    document.getElementById("edit_event_type").value = eventType;
+    document.getElementById("edit_venue_area").value = venueAr
