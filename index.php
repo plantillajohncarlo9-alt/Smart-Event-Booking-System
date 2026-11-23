@@ -133,294 +133,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Golden Moments | Welcome</title>
+    <title>CED Event & Catering Services | Welcome</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=<?= time() ?>">
     <script src="script.js" defer></script>
-
-    <style>
-        body.auth-page {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background:
-                radial-gradient(circle at 8% 14%, rgba(244, 198, 211, .55), transparent 34%),
-                radial-gradient(circle at 92% 86%, rgba(234, 217, 184, .36), transparent 36%),
-                linear-gradient(135deg, #fff8f6 0%, #fae8ee 52%, #fffdfb 100%);
-        }
-
-        body.auth-page::before,
-        body.auth-page::after {
-            content: '✿';
-            position: fixed;
-            z-index: 0;
-            color: rgba(185, 120, 142, .14);
-            font-size: clamp(160px, 24vw, 310px);
-            line-height: 1;
-            pointer-events: none;
-        }
-
-        body.auth-page::before {
-            top: 65px;
-            left: -70px;
-            transform: rotate(-22deg);
-        }
-
-        body.auth-page::after {
-            right: -65px;
-            bottom: -65px;
-            transform: rotate(25deg);
-        }
-
-        .auth-page .site-header,
-        .auth-page .auth-layout,
-        .auth-page .site-footer {
-            position: relative;
-            z-index: 1;
-        }
-
-        .auth-page .site-header {
-            background: rgba(255, 251, 249, .92);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .auth-page .brand {
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-size: 30px;
-            font-weight: 700;
-            color: var(--pink-dark);
-        }
-
-        .auth-page .brand span {
-            color: var(--gold);
-        }
-
-        .auth-page .header-note {
-            color: var(--muted);
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-size: 16px;
-        }
-
-        .auth-page .auth-layout {
-            flex: 1;
-            width: min(1140px, 90%);
-            margin: auto;
-            padding: 52px 0;
-            display: grid;
-            grid-template-columns: 1.15fr .85fr;
-            align-items: center;
-            gap: 56px;
-        }
-
-        .auth-page .intro-panel {
-            max-width: 560px;
-        }
-
-        .auth-page .intro-panel .eyebrow {
-            color: var(--gold);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 3.5px;
-            margin-bottom: 14px;
-        }
-
-        .auth-page .intro-panel h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-weight: 600;
-            font-size: clamp(44px, 5.5vw, 68px);
-            line-height: 1.06;
-            color: var(--brown);
-            margin-bottom: 18px;
-        }
-
-        .auth-page .intro-panel h1 span {
-            color: var(--pink-dark);
-        }
-
-        .auth-page .intro-panel > p:last-child {
-            max-width: 480px;
-            color: var(--muted);
-            font-size: 15px;
-            line-height: 1.8;
-        }
-
-        .auth-page .auth-card {
-            width: 100%;
-            max-width: 430px;
-            justify-self: end;
-            padding: 34px;
-            background: rgba(255, 253, 251, .96);
-            border: 1px solid var(--border);
-            border-radius: 22px;
-            box-shadow: 0 18px 44px rgba(130, 83, 99, .12);
-        }
-
-        .auth-page .tabs {
-            display: flex;
-            gap: 10px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .auth-page .tab-button {
-            flex: 1;
-            padding: 12px 8px;
-            background: transparent;
-            color: var(--muted);
-            border-radius: 0;
-            border-bottom: 3px solid transparent;
-            box-shadow: none;
-        }
-
-        .auth-page .tab-button:hover {
-            background: #fff5f7;
-            color: var(--pink-dark);
-            transform: none;
-            box-shadow: none;
-        }
-
-        .auth-page .tab-button.active {
-            color: var(--pink-dark);
-            border-bottom: 3px solid var(--pink-mid);
-            background: transparent;
-        }
-
-        .auth-page .auth-form {
-            display: none;
-        }
-
-        .auth-page .auth-form.show {
-            display: block;
-        }
-
-        .auth-page .auth-form h2 {
-            font-size: 26px;
-            margin-bottom: 6px;
-        }
-
-        .auth-page .auth-form .muted {
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        .auth-page .auth-form label {
-            margin-bottom: 6px;
-            font-size: 12.5px;
-        }
-
-        .auth-page .auth-form input {
-            margin-bottom: 15px;
-            padding: 12px 14px;
-            background: #fffdfb;
-            border: 1px solid #ead6dc;
-            border-radius: 12px;
-        }
-
-        .auth-page .auth-form input:focus {
-            border-color: var(--pink-mid);
-            box-shadow: 0 0 0 3px rgba(198, 141, 160, .15);
-        }
-
-        .auth-page .auth-form .btn.primary.full {
-            width: 100%;
-            margin-top: 4px;
-            padding: 13px;
-            background: linear-gradient(135deg, var(--pink-mid), var(--pink-dark));
-            color: #fff;
-            border-radius: 30px;
-        }
-
-        .auth-page .auth-form .btn.primary.full:hover {
-            background: linear-gradient(135deg, var(--brown), var(--pink-dark));
-        }
-
-        .auth-page .form-switch {
-            margin-top: 18px;
-            text-align: center;
-            font-size: 12.5px;
-            color: var(--muted);
-        }
-
-        .auth-page .text-button {
-            display: inline;
-            padding: 0;
-            margin-left: 3px;
-            background: transparent;
-            color: var(--pink-dark);
-            border-radius: 0;
-            font-size: 12.5px;
-            box-shadow: none;
-        }
-
-        .auth-page .text-button:hover {
-            background: transparent;
-            color: var(--gold);
-            transform: none;
-            box-shadow: none;
-        }
-
-        .auth-page .site-footer {
-            margin-top: 0;
-            padding: 18px 20px 24px;
-            background: transparent;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        @media (max-width: 820px) {
-            .auth-page .auth-layout {
-                grid-template-columns: 1fr;
-                gap: 32px;
-                padding: 36px 0;
-            }
-
-            .auth-page .intro-panel {
-                text-align: center;
-                margin: auto;
-            }
-
-            .auth-page .intro-panel > p:last-child {
-                margin: auto;
-            }
-
-            .auth-page .auth-card {
-                justify-self: center;
-            }
-        }
-
-        @media (max-width: 520px) {
-            .auth-page .auth-layout {
-                width: 92%;
-                padding: 28px 0;
-            }
-
-            .auth-page .intro-panel h1 {
-                font-size: 40px;
-            }
-
-            .auth-page .auth-card {
-                padding: 24px 20px;
-            }
-        }
-    </style>
 </head>
 
-<body class="auth-page">
+<body class="auth-page floral-auth">
 
 <header class="site-header">
     <a class="brand" href="index.php">
-        Golden <span>Moments</span>
+        <span class="brand-crown" aria-hidden="true">♛</span>
+        CED Event & <span>Catering Services</span>
     </a>
 
     <span class="header-note">
-        Make every celebration memorable
+        Plan • Book • Celebrate
     </span>
 </header>
 
@@ -428,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <section class="intro-panel">
 
-        <p class="eyebrow">EVENTS MADE SPECIAL</p>
+        <p class="eyebrow">PLAN • BOOK • CELEBRATE</p>
 
         <h1>
             Your moments.<br>
@@ -436,13 +167,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </h1>
 
         <p>
-            Plan your celebration with Golden Moments.
-            Register or log in to start your event booking.
+            Turning your special celebrations with CED Event & Catering Services
+            into unforgettable memories. Register or log in to start your booking.
         </p>
 
     </section>
 
-    <section class="auth-card">
+    <section class="auth-card floral-card">
 
         <div class="tabs">
 
@@ -502,7 +233,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 required>
 
             <button class="btn primary full" type="submit">
-                Log in
+                Log in →
             </button>
 
             <p class="form-switch">
@@ -548,7 +279,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 placeholder="you@example.com"
                 required>
 
-            <label>Phone number (optional)</label>
+            <label>Phone number <span class="optional">(optional)</span></label>
 
             <input type="tel"
                 name="phone"
@@ -564,7 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 required>
 
             <button class="btn primary full" type="submit">
-                Create account
+                Create account →
             </button>
 
             <p class="form-switch">
@@ -584,7 +315,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </main>
 
 <footer class="site-footer">
-    © <?= date("Y") ?> Golden Moments Event Booking
+    © <?= date("Y") ?> CED Event & Catering Services
 </footer>
 
 </body>
