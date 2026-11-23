@@ -136,7 +136,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <title>Golden Moments | Welcome</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/smart-event-booking/style.css?v=2">
     <script src="script.js" defer></script>
 </head>
 
