@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 require_once "db.php";
@@ -158,20 +157,20 @@ if (isset($_SESSION["admin_id"])) {
 
     <link rel="stylesheet" href="style.css">
 
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         /* =================================
-           CED ADMIN - PASTEL PINK DESIGN
+           CED ADMIN - BLUSH & CREAM THEME
         ================================= */
 
         body {
             background:
-                radial-gradient(circle at 10% 10%, rgba(255,218,229,.8), transparent 30%),
-                radial-gradient(circle at 90% 80%, rgba(242,190,207,.45), transparent 30%),
-                linear-gradient(135deg, #fff5f7, #fce8ee, #fffafb);
+                radial-gradient(circle at 8% 12%, rgba(244, 198, 211, .52), transparent 34%),
+                radial-gradient(circle at 92% 88%, rgba(234, 217, 184, .34), transparent 36%),
+                linear-gradient(135deg, #fff8f6, #fae8ee, #fffdfb);
             background-attachment: fixed;
-            color: #59414a;
+            color: #554348;
         }
 
         .admin-layout {
@@ -182,43 +181,44 @@ if (isset($_SESSION["admin_id"])) {
         /* SIDEBAR */
 
         .admin-sidebar {
-            width: 255px;
+            width: 248px;
             min-height: 100vh;
-            padding: 30px 18px;
+            padding: 28px 18px;
             position: fixed;
             inset: 0 auto 0 0;
             z-index: 100;
             display: flex;
             flex-direction: column;
-            color: white;
-            background: linear-gradient(180deg, #bd8499, #98677d);
-            box-shadow: 5px 0 25px rgba(130, 75, 96, .12);
+            color: #fff;
+            background: linear-gradient(180deg, #c7859a 0%, #a96980 100%);
+            box-shadow: 6px 0 26px rgba(130, 75, 96, .12);
         }
 
         .admin-logo {
             text-align: center;
-            padding: 12px 5px 35px;
-            color: #fff4f6;
-            font-family: 'Playfair Display', serif;
-            font-size: 25px;
+            padding: 8px 6px 32px;
+            color: #fff6f8;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
             font-style: italic;
             font-weight: 700;
+            line-height: 1.15;
         }
 
         .admin-logo small {
             display: block;
             font-family: 'DM Sans', sans-serif;
-            font-size: 10px;
-            letter-spacing: 3px;
+            font-size: 9.5px;
+            letter-spacing: 2.6px;
             font-style: normal;
             margin-top: 7px;
-            color: #ffe5ed;
+            color: #ffe9f0;
         }
 
         .admin-menu {
             display: flex;
             flex-direction: column;
-            gap: 9px;
+            gap: 8px;
         }
 
         .admin-menu a,
@@ -226,37 +226,39 @@ if (isset($_SESSION["admin_id"])) {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 13px 15px;
-            color: #fff4f6;
+            padding: 12px 15px;
+            color: #fff6f8;
             border-radius: 12px;
             font-size: 13px;
             font-weight: 600;
-            transition: .25s;
+            transition: .25s ease;
         }
 
         .admin-menu a:hover,
         .admin-menu a.active,
         .admin-logout a:hover {
-            background: rgba(255,255,255,.2);
+            background: rgba(255, 255, 255, .2);
+            color: #fff;
         }
 
         .admin-menu .menu-icon {
-            width: 22px;
+            width: 20px;
             text-align: center;
-            font-size: 17px;
+            font-size: 15px;
         }
 
         .admin-logout {
             margin-top: auto;
-            padding-top: 25px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, .16);
         }
 
         /* MAIN AREA */
 
         .admin-main {
-            width: calc(100% - 255px);
-            margin-left: 255px;
-            padding: 32px;
+            width: calc(100% - 248px);
+            margin-left: 248px;
+            padding: 28px 34px;
             min-height: 100vh;
         }
 
@@ -265,42 +267,45 @@ if (isset($_SESSION["admin_id"])) {
             justify-content: space-between;
             align-items: center;
             gap: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
 
         .admin-topbar h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 27px;
+            font-size: 28px;
             margin: 0;
-            color: #59414a;
+            color: #6e4f56;
         }
 
         .admin-topbar p {
-            color: #9b858d;
+            color: #927e84;
             font-size: 13px;
-            margin-top: 4px;
+            margin-top: 3px;
         }
 
         .admin-user {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: rgba(255,255,255,.75);
-            padding: 9px 15px;
+            background: rgba(255, 253, 251, .92);
+            padding: 8px 16px 8px 8px;
             border-radius: 30px;
-            border: 1px solid #f0dce2;
+            border: 1px solid #f0dfe4;
+            box-shadow: 0 4px 14px rgba(130, 83, 99, .06);
             font-size: 13px;
             font-weight: 700;
+            color: #6e4f56;
         }
 
         .admin-user-icon {
-            width: 35px;
-            height: 35px;
+            width: 34px;
+            height: 34px;
             display: grid;
             place-items: center;
             border-radius: 50%;
-            background: #f3d5df;
-            color: #9d6178;
+            background: #f8e9ed;
+            color: #b9788e;
+            font-size: 15px;
         }
 
         /* WELCOME BANNER */
@@ -308,26 +313,26 @@ if (isset($_SESSION["admin_id"])) {
         .admin-welcome {
             position: relative;
             overflow: hidden;
-            padding: 30px;
+            padding: 26px 30px;
             border-radius: 20px;
-            margin-bottom: 25px;
-            color: #704c5b;
+            margin-bottom: 22px;
+            color: #6e4f56;
             background:
-                linear-gradient(100deg, rgba(255,245,248,.97), rgba(255,226,235,.85)),
+                linear-gradient(100deg, rgba(255, 251, 249, .96), rgba(252, 232, 238, .88)),
                 url('images/wedding-banner.jpg') center/cover;
-            border: 1px solid #f0d5df;
-            box-shadow: 0 8px 25px rgba(166,105,125,.08);
+            border: 1px solid #f0dfe4;
+            box-shadow: 0 10px 26px rgba(130, 83, 99, .07);
         }
 
         .admin-welcome h1 {
-            color: #704c5b;
+            color: #6e4f56;
             font-family: 'Playfair Display', serif;
-            font-size: 30px;
-            margin-bottom: 7px;
+            font-size: 28px;
+            margin-bottom: 5px;
         }
 
         .admin-welcome p {
-            color: #987783;
+            color: #927e84;
             font-size: 13px;
         }
 
@@ -336,56 +341,65 @@ if (isset($_SESSION["admin_id"])) {
         .admin-stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin-bottom: 28px;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .admin-stat-card {
-            background: rgba(255,250,251,.95);
-            border: 1px solid #f0dce2;
-            border-radius: 17px;
-            padding: 21px;
-            box-shadow: 0 7px 22px rgba(166,105,125,.08);
-            transition: .25s;
+            background: rgba(255, 253, 251, .96);
+            border: 1px solid #f0dfe4;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 8px 22px rgba(130, 83, 99, .07);
+            transition: .25s ease;
         }
 
         .admin-stat-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-3px);
+        }
+
+        .admin-stat-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .admin-stat-icon {
-            width: 42px;
-            height: 42px;
+            width: 28px;
+            height: 28px;
             display: grid;
             place-items: center;
-            background: #fce8ee;
-            border-radius: 12px;
-            font-size: 20px;
-            margin-bottom: 14px;
+            background: #f8e9ed;
+            color: #b9788e;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
         .admin-stat-card p {
-            color: #9b858d;
+            color: #927e84;
             font-size: 12px;
             font-weight: 600;
+            margin: 0;
         }
 
         .admin-stat-card h2 {
-            font-family: 'DM Sans', sans-serif;
-            color: #59414a;
-            font-size: 29px;
-            margin: 3px 0 0;
+            font-family: 'Playfair Display', serif;
+            color: #554348;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 2px 0 0;
         }
 
         /* CONTENT PANEL */
 
         .admin-panel {
-            background: rgba(255,250,251,.96);
-            border: 1px solid #f0dce2;
+            background: rgba(255, 253, 251, .96);
+            border: 1px solid #f0dfe4;
             border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(166,105,125,.07);
-            margin-bottom: 25px;
+            padding: 24px;
+            box-shadow: 0 10px 26px rgba(130, 83, 99, .07);
+            margin-bottom: 22px;
         }
 
         .admin-panel-heading {
@@ -393,17 +407,18 @@ if (isset($_SESSION["admin_id"])) {
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .admin-panel-heading h2 {
             font-family: 'Playfair Display', serif;
-            font-size: 22px;
+            font-size: 21px;
+            color: #6e4f56;
             margin: 0;
         }
 
         .admin-panel-heading span {
-            color: #a1848e;
+            color: #927e84;
             font-size: 12px;
         }
 
@@ -412,38 +427,47 @@ if (isset($_SESSION["admin_id"])) {
         .admin-table-wrap {
             width: 100%;
             overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid #f0dfe4;
         }
 
         .admin-table {
             width: 100%;
             min-width: 850px;
             border-collapse: collapse;
+            background: #fffdfb;
         }
 
         .admin-table th {
-            background: #fcecf1;
-            color: #765361;
-            padding: 14px;
-            font-size: 11px;
+            background: #f8e9ed;
+            color: #6e4f56;
+            padding: 13px 15px;
+            font-size: 12px;
+            font-weight: 700;
             text-align: left;
             white-space: nowrap;
         }
 
         .admin-table td {
-            padding: 14px;
-            border-bottom: 1px solid #f1e2e7;
-            font-size: 12px;
+            padding: 13px 15px;
+            border-bottom: 1px solid #f2e4e8;
+            font-size: 12.5px;
+            color: #554348;
             vertical-align: middle;
         }
 
+        .admin-table tr:last-child td {
+            border-bottom: none;
+        }
+
         .admin-table tr:hover td {
-            background: #fff5f7;
+            background: #fff8fa;
         }
 
         .admin-table small {
             display: block;
-            color: #a18d94;
-            margin-top: 4px;
+            color: #927e84;
+            margin-top: 3px;
         }
 
         .status-form {
@@ -454,51 +478,57 @@ if (isset($_SESSION["admin_id"])) {
         }
 
         .status-form select {
-            min-width: 105px;
-            padding: 8px;
-            font-size: 11px;
-            border: 1px solid #ead4dd;
-            border-radius: 8px;
-            background: white;
+            min-width: 108px;
+            padding: 7px 10px;
+            margin-bottom: 0;
+            font-size: 12px;
+            border: 1px solid #ead6dc;
+            border-radius: 9px;
+            background: #fff;
+            color: #554348;
         }
 
         .admin-save {
             border: none;
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: white;
-            background: #c77f98;
-            font-size: 11px;
+            border-radius: 20px;
+            padding: 7px 14px;
+            color: #fff;
+            background: linear-gradient(135deg, #c68da0, #b9788e);
+            font-size: 11.5px;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: none;
         }
 
         .admin-save:hover {
-            background: #a96580;
+            background: linear-gradient(135deg, #6e4f56, #b9788e);
+            transform: translateY(-1px);
         }
 
         .admin-alert {
             padding: 13px 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 20px;
             font-size: 13px;
             font-weight: 600;
         }
 
         .admin-alert.error {
-            background: #fbe7e8;
-            color: #a84e5a;
+            background: #fff0ef;
+            color: #a34f4f;
+            border: 1px solid #f3d2cf;
         }
 
         .admin-alert.success {
-            background: #e8f2e8;
-            color: #547a59;
+            background: #edf6ee;
+            color: #4d7350;
+            border: 1px solid #cde2cf;
         }
 
         .admin-empty {
             text-align: center;
             padding: 40px 15px;
-            color: #a18d94;
+            color: #927e84;
         }
 
         /* LOGIN PAGE */
@@ -508,108 +538,118 @@ if (isset($_SESSION["admin_id"])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 25px;
+            padding: 28px 20px;
             background:
-                radial-gradient(circle at 10% 10%, rgba(255,218,229,.8), transparent 30%),
-                radial-gradient(circle at 90% 90%, rgba(242,190,207,.55), transparent 35%),
-                linear-gradient(135deg, #fff2f5, #f8dfe7, #fffafb);
+                radial-gradient(circle at 12% 14%, rgba(244, 198, 211, .62), transparent 34%),
+                radial-gradient(circle at 88% 86%, rgba(234, 217, 184, .38), transparent 36%),
+                linear-gradient(135deg, #fff7f8, #fae7ed, #fffdfb);
         }
 
         .admin-login-card {
             width: 100%;
-            max-width: 440px;
-            padding: 40px;
-            border-radius: 23px;
-            background: rgba(255,250,251,.96);
-            border: 1px solid #f0dce2;
-            box-shadow: 0 15px 50px rgba(130,75,96,.15);
+            max-width: 410px;
+            padding: 36px 34px;
+            border-radius: 24px;
+            background: rgba(255, 253, 251, .96);
+            border: 1px solid #f0dfe4;
+            box-shadow: 0 18px 46px rgba(130, 83, 99, .14);
         }
 
         .login-crown {
             text-align: center;
-            font-size: 35px;
-            margin-bottom: 5px;
+            font-size: 26px;
+            color: #c6a46a;
+            margin-bottom: 2px;
         }
 
         .login-brand {
             text-align: center;
-            font-family: 'Playfair Display', serif;
-            font-size: 28px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 31px;
             font-style: italic;
-            color: #875b6c;
-            margin-bottom: 25px;
+            font-weight: 700;
+            color: #6e4f56;
+            margin-bottom: 18px;
         }
 
         .admin-login-card h1 {
             text-align: center;
             font-family: 'Playfair Display', serif;
-            color: #59414a;
+            color: #554348;
             font-size: 28px;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .login-subtitle {
             text-align: center;
-            color: #a18d94;
+            color: #927e84;
             font-size: 13px;
-            margin-bottom: 25px;
+            margin-bottom: 22px;
         }
 
         .admin-login-form {
             display: flex;
             flex-direction: column;
-            gap: 13px;
+            gap: 4px;
         }
 
         .admin-login-form label {
             font-size: 12px;
-            color: #765361;
+            color: #6e4f56;
+            margin-bottom: 5px;
         }
 
         .admin-login-form input {
-            padding: 13px 15px;
-            border: 1px solid #ead4dd;
-            border-radius: 10px;
-            background: white;
+            padding: 12px 15px;
+            margin-bottom: 14px;
+            border: 1px solid #ead6dc;
+            border-radius: 12px;
+            background: #fffdfb;
         }
 
         .admin-login-form input:focus {
             outline: none;
-            border-color: #c77f98;
-            box-shadow: 0 0 0 3px rgba(199,127,152,.12);
+            border-color: #c68da0;
+            box-shadow: 0 0 0 3px rgba(198, 141, 160, .15);
         }
 
         .login-submit {
+            width: 100%;
             border: none;
             border-radius: 30px;
             padding: 13px;
-            margin-top: 10px;
-            background: linear-gradient(135deg, #d995aa, #b96f88);
-            color: white;
+            margin-top: 6px;
+            background: linear-gradient(135deg, #c68da0, #b9788e);
+            color: #fff;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(185,111,136,.2);
+            box-shadow: 0 6px 18px rgba(185, 120, 142, .28);
         }
 
         .login-submit:hover {
-            background: #a96580;
+            background: linear-gradient(135deg, #6e4f56, #b9788e);
         }
 
         .back-website {
             text-align: center;
-            margin-top: 23px;
-            font-size: 12px;
+            margin-top: 20px;
+            font-size: 12.5px;
         }
 
         .back-website a {
-            color: #98677d;
+            color: #927e84;
+            font-weight: 500;
+        }
+
+        .back-website a:hover {
+            color: #b9788e;
         }
 
         .admin-footer {
             text-align: center;
-            padding: 22px;
-            color: #a18d94;
-            font-size: 11px;
+            padding: 20px;
+            color: #927e84;
+            font-size: 12px;
         }
 
         /* RESPONSIVE */
@@ -625,7 +665,7 @@ if (isset($_SESSION["admin_id"])) {
                 position: relative;
                 width: 100%;
                 min-height: auto;
-                padding: 15px;
+                padding: 16px;
             }
 
             .admin-layout {
@@ -633,22 +673,23 @@ if (isset($_SESSION["admin_id"])) {
             }
 
             .admin-logo {
-                padding: 5px 5px 15px;
+                padding: 4px 4px 14px;
             }
 
             .admin-menu {
                 flex-direction: row;
                 flex-wrap: wrap;
+                justify-content: center;
             }
 
             .admin-menu a {
-                padding: 9px 11px;
-                font-size: 11px;
+                padding: 9px 12px;
+                font-size: 12px;
             }
 
             .admin-logout {
                 margin-top: 10px;
-                padding-top: 5px;
+                padding-top: 10px;
             }
 
             .admin-main {
@@ -689,7 +730,7 @@ if (isset($_SESSION["admin_id"])) {
             }
 
             .admin-login-card {
-                padding: 27px;
+                padding: 28px 22px;
             }
         }
     </style>
@@ -769,7 +810,7 @@ if (isset($_SESSION["admin_id"])) {
                 >
 
                 <button type="submit" class="login-submit">
-                    ♙ Login to Dashboard
+                    → Login
                 </button>
             </form>
 
@@ -788,7 +829,7 @@ if (isset($_SESSION["admin_id"])) {
         <?php endif; ?>
 
         <div class="back-website">
-            <a href="index.php">← Back to Customer Website</a>
+            <a href="index.php">← Back to Website</a>
         </div>
 
     </section>
@@ -881,26 +922,34 @@ if (isset($_SESSION["admin_id"])) {
         <section class="admin-stats">
 
             <div class="admin-stat-card">
-                <div class="admin-stat-icon">▦</div>
-                <p>Total Bookings</p>
+                <div class="admin-stat-top">
+                    <span class="admin-stat-icon">▦</span>
+                    <p>Total Bookings</p>
+                </div>
                 <h2><?= $totalBookings ?></h2>
             </div>
 
             <div class="admin-stat-card">
-                <div class="admin-stat-icon">✓</div>
-                <p>Approved</p>
+                <div class="admin-stat-top">
+                    <span class="admin-stat-icon">✓</span>
+                    <p>Approved</p>
+                </div>
                 <h2><?= $approvedBookings ?></h2>
             </div>
 
             <div class="admin-stat-card">
-                <div class="admin-stat-icon">◷</div>
-                <p>Pending</p>
+                <div class="admin-stat-top">
+                    <span class="admin-stat-icon">◷</span>
+                    <p>Pending</p>
+                </div>
                 <h2><?= $pendingBookings ?></h2>
             </div>
 
             <div class="admin-stat-card">
-                <div class="admin-stat-icon">★</div>
-                <p>Completed</p>
+                <div class="admin-stat-top">
+                    <span class="admin-stat-icon">★</span>
+                    <p>Completed</p>
+                </div>
                 <h2><?= $completedBookings ?></h2>
             </div>
 
@@ -911,7 +960,7 @@ if (isset($_SESSION["admin_id"])) {
 
             <div class="admin-panel-heading">
                 <h2>♧ Recent Bookings</h2>
-                <span>All customer reservations</span>
+                <span>View All →</span>
             </div>
 
             <?php if ($bookings->num_rows === 0): ?>
@@ -1027,7 +1076,7 @@ if (isset($_SESSION["admin_id"])) {
                 <h2>☆ Event Management</h2>
             </div>
 
-            <p style="color:#9b858d;font-size:13px;">
+            <p style="color:#927e84;font-size:13px;">
                 Review customer event types through the bookings table.
                 Event catalog management can be added when an events table
                 is available in your database.
@@ -1040,14 +1089,14 @@ if (isset($_SESSION["admin_id"])) {
                 <h2>⚙ Admin Settings</h2>
             </div>
 
-            <p style="color:#9b858d;font-size:13px;">
+            <p style="color:#927e84;font-size:13px;">
                 Logged in as:
                 <strong><?= e($_SESSION["admin_username"]) ?></strong>
             </p>
         </section>
 
         <footer class="admin-footer">
-            CED Event & Catering Services &bull; Admin Dashboard
+            CED Event & Catering Services • Admin Dashboard
         </footer>
 
     </main>
