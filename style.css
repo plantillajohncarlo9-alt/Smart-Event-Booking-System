@@ -947,3 +947,46 @@ tr:hover td {
         padding: 15px;
     }
 }
+
+/* PREMIUM TYPOGRAPHY */
+
+body,
+input,
+select,
+textarea,
+button {
+    font-family: 'Manrope', sans-serif;
+}
+
+h1,
+h2,
+h3,
+.brand,
+.intro-panel h1,
+.page-heading h1,
+.content-card h2,
+.auth-form h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+}
+
+h1 {
+    letter-spacing: -0.5px;
+}
+
+h2 {
+    letter-spacing: -0.3px;
+}
+
+.brand {
+    font-size: 29px;
+    font-weight: 700;
+}
+
+label,
+.btn,
+.nav-links,
+.eyebrow,
+th {
+    font-family: 'Manrope', sans-serif;
+}
