@@ -8,8 +8,8 @@
     --rose-blush: #fae8ee;
     --cream: #fff8f6;
     --ivory: #fffdfb;
-    --gold: #c6a46a;
-    --gold-light: #ead9b8;
+    --gold: #c68da0;
+    --gold-light: #f8e9ed;
     --brown: #6e4f56;
     --text: #554348;
     --muted: #927e84;
@@ -34,8 +34,8 @@ body {
 body {
     font-family: 'DM Sans', sans-serif;
     background:
-        radial-gradient(circle at 8% 12%, rgba(244, 198, 211, 0.48), transparent 34%),
-        radial-gradient(circle at 92% 88%, rgba(234, 217, 184, 0.32), transparent 36%),
+        radial-gradient(circle at 8% 12%, rgba(244, 198, 211, 0.52), transparent 34%),
+        radial-gradient(circle at 92% 88%, rgba(248, 226, 232, 0.42), transparent 36%),
         linear-gradient(135deg, var(--cream) 0%, var(--rose-blush) 52%, var(--ivory) 100%);
     background-attachment: fixed;
     color: var(--text);
@@ -59,7 +59,7 @@ a {
 }
 
 a:hover {
-    color: var(--gold);
+    color: var(--pink-mid);
 }
 
 .muted {
@@ -92,7 +92,7 @@ a:hover {
 }
 
 .brand span {
-    color: var(--gold);
+    color: var(--pink-mid);
 }
 
 .header-note {
@@ -207,7 +207,7 @@ button:hover,
 
 .eyebrow {
     display: inline-block;
-    color: var(--gold);
+    color: var(--pink-dark);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 3.5px;
@@ -313,7 +313,7 @@ button:hover,
 
 .text-button:hover {
     background: transparent;
-    color: var(--gold);
+    color: var(--pink-mid);
     transform: none;
     box-shadow: none;
 }
@@ -442,9 +442,9 @@ td small {
     display: inline-block;
     padding: 4px 12px;
     border-radius: 20px;
-    background: #fff7e8;
-    border: 1px solid #ead8b8;
-    color: #8f6d34;
+    background: var(--pink-light);
+    border: 1px solid #e7ccd4;
+    color: var(--pink-dark);
     font-size: 11px;
     font-weight: 700;
     white-space: nowrap;
@@ -471,7 +471,7 @@ td small {
 .login-crown {
     text-align: center;
     font-size: 26px;
-    color: var(--gold);
+    color: var(--pink-dark);
     margin-bottom: 2px;
 }
 
@@ -817,4 +817,52 @@ td small {
     .admin-panel {
         padding: 22px 18px;
     }
+}
+
+/* FINAL BLUSH PINK OVERRIDE */
+body,
+body.auth-page,
+.admin-login-page {
+    background: linear-gradient(135deg, #fff6f8 0%, #f9e2e9 55%, #fffafc 100%) !important;
+    color: #554348 !important;
+}
+
+.site-header {
+    background: rgba(255, 250, 252, 0.95) !important;
+    border-bottom-color: #f0dce2 !important;
+}
+
+.auth-card,
+.admin-login-card,
+.login-card,
+.content-card,
+.admin-panel,
+.admin-stat-card {
+    background: #fffdfd !important;
+    border-color: #f0dce2 !important;
+}
+
+.brand,
+.login-brand,
+.intro-panel h1 span,
+.page-heading h1 span,
+.tab-button.active {
+    color: #b9788e !important;
+}
+
+.tab-button,
+.text-button {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+button:not(.tab-button):not(.text-button),
+.btn,
+.btn.primary,
+.btn.primary.full,
+.login-submit,
+.admin-save {
+    background: linear-gradient(135deg, #d896ac, #b9788e) !important;
+    color: #ffffff !important;
+    border: none !important;
 }
