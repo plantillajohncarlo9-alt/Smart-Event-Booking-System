@@ -856,3 +856,7 @@ tr:hover td {
         padding: 25px 20px;
     }
 }
+
+body {
+    background: hotpink !important;
+}
