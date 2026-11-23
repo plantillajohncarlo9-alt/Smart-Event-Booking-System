@@ -560,3 +560,36 @@ tr:hover td {
         font-size: 38px;
     }
 }
+
+
+/* HOMEPAGE AUTH PAGE */
+
+.auth-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 10% 15%, #f8e5eb 0, transparent 35%),
+        linear-gradient(135deg, #fffaf6, #f9edf0);
+}
+
+.auth-page .site-header {
+    background: rgba(255, 253, 249, .95);
+}
+
+.auth-page .brand {
+    color: #b9788e;
+}
+
+.auth-page .brand span {
+    color: #c6a46a;
+}
+
+.auth-page .header-note {
+    color: #957c83;
+}
+
+.auth-page .login-card {
+    background: #fffdf9;
+    border: 1px solid #ead9de;
+    box-shadow: 0 15px 40px rgba(130, 83, 99, .12);
+}
+
