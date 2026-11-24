@@ -9,7 +9,6 @@ function e($value) {
 $error = "";
 $success = "";
 
-// LOGOUT ADMIN
 if (isset($_GET["logout"])) {
     unset($_SESSION["admin_logged_in"], $_SESSION["admin_username"]);
     session_destroy();
