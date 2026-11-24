@@ -17,22 +17,32 @@ $message = "";
 $messageType = "success";
 
 $eventTypes = [
-    "Wedding", "Birthday", "Debut",
-    "Anniversary", "Corporate Event", "Other"
+    "Wedding",
+    "Birthday",
+    "Debut",
+    "Anniversary",
+    "Corporate Event",
+    "Other"
 ];
 
 $venueAreas = [
-    "Pool Area", "Garden", "Grand Ballroom", "Function Room"
+    "Pool Area",
+    "Garden",
+    "Grand Ballroom",
+    "Function Room"
 ];
 
-// HANDLE BOOKING SUBMISSION
+// SUBMIT BOOKING
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $eventType = trim($_POST["event_type"] ?? "");
     $venueArea = trim($_POST["venue_area"] ?? "");
     $eventDate = $_POST["event_date"] ?? "";
     $eventTime = $_POST["event_time"] ?? "";
-    $guestCount = filter_var($_POST["guest_count"] ?? "", FILTER_VALIDATE_INT);
+    $guestCount = filter_var(
+        $_POST["guest_count"] ?? "",
+        FILTER_VALIDATE_INT
+    );
     $packageName = trim($_POST["package_name"] ?? "");
 
     if (
@@ -44,106 +54,93 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $guestCount < 1 ||
         $packageName === ""
     ) {
-        $_SESSION["flash_message"] = "Please complete all required fields.";
+
+        $_SESSION["flash_message"] =
+            "Please complete all required fields.";
         $_SESSION["flash_type"] = "error";
 
     } elseif ($eventDate < date("Y-m-d")) {
 
-        $_SESSION["flash_message"] = "Please choose today or a future date.";
+        $_SESSION["flash_message"] =
+            "Please choose today or a future date.";
         $_SESSION["flash_type"] = "error";
 
     } else {
 
-        $validPackages = [
-            "Basic Package - ₱10,000",
-            "Classic Package - ₱20,000",
-            "Premium Package - ₱35,000",
-            "Custom Package - ₱50,000"
-        ];
+        // CHECK VENUE AVAILABILITY
+        $checkStmt = $conn->prepare(
+            "SELECT booking_id FROM bookings
+             WHERE venue_area = ?
+             AND event_date = ?
+             AND event_time = ?
+             AND booking_status != 'Cancelled'"
+        );
 
-        if (!in_array($packageName, $validPackages, true)) {
+        $checkStmt->bind_param(
+            "sss",
+            $venueArea,
+            $eventDate,
+            $eventTime
+        );
 
-            $_SESSION["flash_message"] = "Invalid package selected.";
+        $checkStmt->execute();
+        $checkStmt->store_result();
+
+        if ($checkStmt->num_rows > 0) {
+
+            $_SESSION["flash_message"] =
+                "Sorry, this specific venue area is already booked for the selected date and time.";
+
             $_SESSION["flash_type"] = "error";
 
         } else {
 
-            $checkStmt = $conn->prepare(
-                "SELECT booking_id FROM bookings
-                 WHERE venue_area = ?
-                 AND event_date = ?
-                 AND event_time = ?
-                 AND booking_status != 'Cancelled'"
+            $stmt = $conn->prepare(
+                "INSERT INTO bookings
+                (
+                    customer_id,
+                    event_type,
+                    venue_area,
+                    event_date,
+                    event_time,
+                    guest_count,
+                    package_name,
+                    booking_status,
+                    payment_status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', 'Unpaid')"
             );
 
-            $checkStmt->bind_param(
-                "sss",
+            $stmt->bind_param(
+                "issssis",
+                $customerId,
+                $eventType,
                 $venueArea,
                 $eventDate,
-                $eventTime
+                $eventTime,
+                $guestCount,
+                $packageName
             );
 
-            $checkStmt->execute();
-            $checkStmt->store_result();
-
-            if ($checkStmt->num_rows > 0) {
+            if ($stmt->execute()) {
 
                 $_SESSION["flash_message"] =
-                    "Sorry, this venue area is already booked for the selected date and time.";
+                    "Reservation submitted successfully! Please settle your down payment in person at CED Event & Catering Services.";
 
-                $_SESSION["flash_type"] = "error";
-
-                $checkStmt->close();
+                $_SESSION["flash_type"] = "success";
 
             } else {
 
-                $checkStmt->close();
+                $_SESSION["flash_message"] =
+                    "Unable to save booking. Please try again.";
 
-                $stmt = $conn->prepare(
-                    "INSERT INTO bookings
-                    (
-                        customer_id,
-                        event_type,
-                        venue_area,
-                        event_date,
-                        event_time,
-                        guest_count,
-                        package_name,
-                        booking_status,
-                        payment_status
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending', 'Unpaid')"
-                );
-
-                $stmt->bind_param(
-                    "issssis",
-                    $customerId,
-                    $eventType,
-                    $venueArea,
-                    $eventDate,
-                    $eventTime,
-                    $guestCount,
-                    $packageName
-                );
-
-                if ($stmt->execute()) {
-
-                    $_SESSION["flash_message"] =
-                        "Reservation submitted successfully! Please settle your down payment in person at CED Event & Catering Services.";
-
-                    $_SESSION["flash_type"] = "success";
-
-                } else {
-
-                    $_SESSION["flash_message"] =
-                        "Unable to save booking. Please try again.";
-
-                    $_SESSION["flash_type"] = "error";
-                }
-
-                $stmt->close();
+                $_SESSION["flash_type"] = "error";
             }
+
+            $stmt->close();
         }
+
+        $checkStmt->close();
     }
 
     header("Location: booking.php");
@@ -174,9 +171,9 @@ $stmt = $conn->prepare(
         package_name,
         booking_status,
         payment_status
-     FROM bookings
-     WHERE customer_id = ?
-     ORDER BY booking_id DESC"
+    FROM bookings
+    WHERE customer_id = ?
+    ORDER BY booking_id DESC"
 );
 
 $stmt->bind_param("i", $customerId);
@@ -200,219 +197,190 @@ $bookings = $stmt->get_result();
 <style>
 
 /* =================================
-   VISUAL BOOKING SELECTION
+   IMAGE SELECTION CARDS
 ================================= */
 
-.choice-section {
+.selection-section {
     margin-bottom: 35px;
 }
 
-.choice-section > label,
-.section-label {
-    display: block;
+.selection-title {
+    color: #573e49;
+    font-size: 18px;
     font-weight: 700;
-    color: #59434d;
-    margin-bottom: 15px;
-    font-size: 15px;
+    margin-bottom: 8px;
 }
 
-.choice-description {
-    color: #967d88;
+.selection-description {
+    color: #927c87;
     font-size: 13px;
-    margin-top: -8px;
     margin-bottom: 18px;
 }
 
-.visual-choice-grid {
+.image-selection-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
+    gap: 18px;
 }
 
-.venue-choice-grid {
+.venue-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.visual-choice {
+.image-option {
     position: relative;
     display: block;
     cursor: pointer;
-    min-width: 0;
 }
 
-.visual-choice input {
+.image-option input {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
-.choice-card {
+.image-card {
     height: 100%;
-    border: 2px solid #f0dce4;
-    border-radius: 15px;
     overflow: hidden;
+    border: 2px solid #f0dfe6;
+    border-radius: 17px;
     background: #fffafa;
     transition: all 0.25s ease;
 }
 
-.choice-card:hover {
-    border-color: #d38ba2;
+.image-card:hover {
+    border-color: #d28aa4;
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(164, 99, 123, 0.12);
+    box-shadow: 0 9px 22px rgba(160, 94, 119, 0.12);
 }
 
-.visual-choice input:checked + .choice-card {
-    border-color: #c66f8b;
+.image-option input:checked + .image-card {
+    border: 3px solid #c46f90;
     background: #fff0f5;
-    box-shadow: 0 0 0 3px rgba(198, 111, 139, 0.12);
+    box-shadow: 0 7px 20px rgba(196, 111, 144, 0.18);
 }
 
-.visual-choice input:focus-visible + .choice-card {
-    outline: 3px solid #9c5270;
+.image-option input:focus-visible + .image-card {
+    outline: 3px solid #b85f83;
     outline-offset: 3px;
 }
 
-.choice-art {
-    height: 145px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(140deg, #fce8ef, #f7d9e4);
-    overflow: hidden;
-}
-
-.venue-choice-grid .choice-art {
-    height: 155px;
-}
-
-.choice-art svg {
+.illustration {
     width: 100%;
-    height: 100%;
-    max-width: 220px;
-    padding: 12px;
+    height: 145px;
+    display: block;
+    background: #fcecf2;
 }
 
-.choice-info {
-    padding: 13px 10px;
+.venue-grid .illustration {
+    height: 125px;
+}
+
+.image-card-info {
+    padding: 14px;
     text-align: center;
 }
 
-.choice-info h3 {
+.image-card-info h3 {
+    color: #634651;
     font-size: 14px;
-    color: #59404c;
-    margin: 0 0 5px;
-}
-
-.choice-info p {
-    font-size: 11px;
-    color: #987e89;
     margin: 0;
-    line-height: 1.5;
 }
 
-.choice-check {
+.image-card-info p {
+    color: #a18a95;
+    font-size: 11px;
+    margin: 6px 0 0;
+}
+
+.selected-indicator {
     display: none;
-    color: #bd6381;
-    font-size: 12px;
+    color: #c46f90;
+    font-size: 11px;
     font-weight: 700;
     margin-top: 8px;
 }
 
-.visual-choice input:checked + .choice-card .choice-check {
+.image-option input:checked + .image-card
+.selected-indicator {
     display: block;
 }
 
-/* Different illustration backgrounds */
+/* =================================
+   FORM FIELDS
+================================= */
 
-.event-wedding .choice-art {
-    background: linear-gradient(135deg, #f8e1e8, #f4cdd9);
-}
-
-.event-birthday .choice-art {
-    background: linear-gradient(135deg, #ffe9d9, #fbd3bb);
-}
-
-.event-debut .choice-art {
-    background: linear-gradient(135deg, #eee0f7, #d9c2eb);
-}
-
-.event-anniversary .choice-art {
-    background: linear-gradient(135deg, #f9e2e9, #edc5d4);
-}
-
-.event-corporate .choice-art {
-    background: linear-gradient(135deg, #dceaf4, #c5dce9);
-}
-
-.event-other .choice-art {
-    background: linear-gradient(135deg, #e9e4f7, #d5d0ec);
-}
-
-.venue-pool .choice-art {
-    background: linear-gradient(135deg, #d8f0f5, #acdce8);
-}
-
-.venue-garden .choice-art {
-    background: linear-gradient(135deg, #e0f0dc, #c5e1bf);
-}
-
-.venue-ballroom .choice-art {
-    background: linear-gradient(135deg, #f8e9d2, #edd3a9);
-}
-
-.venue-function .choice-art {
-    background: linear-gradient(135deg, #e9e1f1, #d6c9e7);
-}
-
-/* OTHER FORM FIELDS */
-
-.booking-form .form-grid {
+.booking-extra-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
     margin-top: 25px;
+    margin-bottom: 25px;
 }
 
-.booking-form button[type="submit"] {
-    margin-top: 20px;
+.booking-extra-fields label {
+    display: block;
+    color: #634651;
+    font-weight: 600;
+    margin-bottom: 9px;
 }
 
-/* BOOKING SUMMARY */
-
-.booking-summary-title {
-    margin-bottom: 20px;
+.booking-extra-fields input,
+.booking-extra-fields select {
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* MOBILE RESPONSIVE */
+.booking-submit {
+    margin-top: 10px;
+}
 
-@media (max-width: 900px) {
+/* =================================
+   RESPONSIVE
+================================= */
 
-    .venue-choice-grid {
+@media (max-width: 768px) {
+
+    .image-selection-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .venue-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .booking-extra-fields {
+        grid-template-columns: 1fr;
+    }
+
 }
 
-@media (max-width: 600px) {
+@media (max-width: 420px) {
 
-    .visual-choice-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+    .illustration {
+        height: 110px;
     }
 
-    .choice-art {
-        height: 115px;
+    .venue-grid .illustration {
+        height: 100px;
     }
 
-    .venue-choice-grid .choice-art {
-        height: 120px;
+    .image-card-info {
+        padding: 10px 5px;
     }
 
-    .choice-info h3 {
-        font-size: 12px;
-    }
+}
 
-    .choice-info p {
-        font-size: 10px;
-    }
+/* BOOKING TABLE */
 
+.booking-status-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: #fbe7ef;
+    color: #a34f70;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 </style>
@@ -441,7 +409,6 @@ $bookings = $stmt->get_result();
 
 </header>
 
-
 <main class="page-wrap">
 
     <section class="page-heading">
@@ -453,13 +420,13 @@ $bookings = $stmt->get_result();
         </h1>
 
         <p>
-            Explore our event styles and venue areas.
-            Choose your preferred event, location, and package.
-            A down payment settled in person is required to confirm your schedule.
+            Choose your preferred event type and venue area.
+            Explore the illustrations to help you decide.
+            A down payment settled in person is required
+            to confirm your schedule.
         </p>
 
     </section>
-
 
     <?php if ($message !== ""): ?>
 
@@ -478,77 +445,85 @@ $bookings = $stmt->get_result();
 
         <h2>Event booking form</h2>
 
-        <p class="muted">
-            Select an event type and venue area to explore your options.
-        </p>
-
-
         <form method="POST" action="booking.php" class="booking-form">
 
-            <!-- =================================
-                 EVENT TYPE SELECTION
-            ================================== -->
+            <!-- EVENT TYPE SELECTION -->
 
-            <div class="choice-section">
+            <div class="selection-section">
 
-                <label class="section-label">
+                <h3 class="selection-title">
                     Choose Event Type
-                </label>
+                </h3>
 
-                <p class="choice-description">
-                    Select the type of celebration you are planning.
+                <p class="selection-description">
+                    Select the event that you are planning.
                 </p>
 
-
-                <div class="visual-choice-grid">
-
+                <div class="image-selection-grid">
 
                     <!-- WEDDING -->
 
-                    <label class="visual-choice event-wedding">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Wedding"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Wedding"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#f9e2ec"/>
 
-                                    <circle cx="100" cy="65" r="48" fill="#fff8fa" opacity=".55"/>
+                                <circle cx="150" cy="70" r="48" fill="#fff4f7"/>
 
-                                    <path d="M65 108 L88 48 L100 68 L112 48 L135 108 Z"
-                                          fill="#fff" stroke="#b77b91" stroke-width="2"/>
+                                <path d="M112 40 L150 15 L188 40"
+                                      fill="none" stroke="#c47c9b"
+                                      stroke-width="3"/>
 
-                                    <path d="M88 48 L100 68 L112 48"
-                                          fill="none" stroke="#d19bad" stroke-width="2"/>
+                                <path d="M150 15 L150 5"
+                                      stroke="#c47c9b" stroke-width="3"/>
 
-                                    <circle cx="88" cy="40" r="12" fill="none" stroke="#b77b91" stroke-width="5"/>
+                                <path d="M130 75 L170 75 L190 150 L110 150 Z"
+                                      fill="#fff" stroke="#d9a8bc" stroke-width="2"/>
 
-                                    <circle cx="112" cy="40" r="12" fill="none" stroke="#d5a4b4" stroke-width="5"/>
+                                <path d="M130 75 Q150 105 170 75"
+                                      fill="#f8d8e5"/>
 
-                                    <path d="M78 28 Q100 12 122 28"
-                                          fill="none" stroke="#c58ca0" stroke-width="2"/>
+                                <path d="M150 85 L150 150"
+                                      stroke="#e7bfd0" stroke-width="2"/>
 
-                                    <circle cx="100" cy="20" r="4" fill="#d6a4b4"/>
+                                <circle cx="150" cy="43" r="13" fill="#f4c8d8"/>
 
-                                    <path d="M65 108 Q100 116 135 108"
-                                          fill="none" stroke="#c58ca0" stroke-width="2"/>
+                                <path d="M110 40 Q150 0 190 40"
+                                      fill="none" stroke="#fff"
+                                      stroke-width="8"/>
 
-                                </svg>
+                                <path d="M95 150 Q150 135 205 150"
+                                      fill="none" stroke="#d7a1b6" stroke-width="4"/>
 
-                            </div>
+                                <g fill="#d78eac">
+                                    <circle cx="90" cy="115" r="6"/>
+                                    <circle cx="210" cy="115" r="6"/>
+                                    <circle cx="100" cy="130" r="5"/>
+                                    <circle cx="200" cy="130" r="5"/>
+                                </g>
 
-                            <div class="choice-info">
+                            </svg>
+
+                            <div class="image-card-info">
 
                                 <h3>Wedding</h3>
 
-                                <p>Elegant and romantic celebration</p>
+                                <p>Elegant wedding celebration</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -559,55 +534,67 @@ $bookings = $stmt->get_result();
 
                     <!-- BIRTHDAY -->
 
-                    <label class="visual-choice event-birthday">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Birthday"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Birthday"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#fff0d9"/>
 
-                                    <circle cx="100" cy="65" r="49" fill="#fff8f1" opacity=".55"/>
+                                <circle cx="150" cy="78" r="55" fill="#fff9e9"/>
 
-                                    <rect x="52" y="66" width="96" height="39" rx="8"
-                                          fill="#f6b5a5" stroke="#c77f70" stroke-width="2"/>
+                                <path d="M70 145 L230 145"
+                                      stroke="#d9a16b" stroke-width="4"/>
 
-                                    <path d="M52 82 H148" stroke="#fff1dc" stroke-width="5"/>
+                                <rect x="100" y="92" width="100" height="50"
+                                      rx="7" fill="#eaa5b9"/>
 
-                                    <rect x="65" y="43" width="70" height="27" rx="5"
-                                          fill="#fff1d9" stroke="#d99c77" stroke-width="2"/>
+                                <rect x="112" y="68" width="76" height="28"
+                                      rx="5" fill="#f8cf81"/>
 
-                                    <path d="M75 43 Q85 32 95 43 Q105 32 115 43 Q125 32 125 43"
-                                          fill="#f5b7a0"/>
+                                <path d="M150 68 L150 43"
+                                      stroke="#98715b" stroke-width="4"/>
 
-                                    <path d="M100 43 V22" stroke="#8b6170" stroke-width="3"/>
+                                <path d="M150 43 Q138 32 150 22 Q162 32 150 43"
+                                      fill="#f5a343"/>
 
-                                    <path d="M95 22 Q100 9 105 22 Q100 31 95 22"
-                                          fill="#edaa58"/>
+                                <g fill="#e48bad">
+                                    <circle cx="75" cy="45" r="15"/>
+                                    <circle cx="225" cy="45" r="15"/>
+                                </g>
 
-                                    <circle cx="70" cy="30" r="7" fill="#d98aa4"/>
+                                <path d="M75 60 L70 100 L80 100 Z"
+                                      fill="#f4c2d3"/>
 
-                                    <circle cx="130" cy="25" r="8" fill="#edb46c"/>
+                                <path d="M225 60 L220 100 L230 100 Z"
+                                      fill="#f4c2d3"/>
 
-                                    <path d="M40 45 L44 55 M36 50 L47 50 M155 45 L160 55 M152 50 L164 50"
-                                          stroke="#c98a9e" stroke-width="2"/>
+                                <path d="M90 85 L100 75 L110 85"
+                                      stroke="#d99aaf" stroke-width="3" fill="none"/>
 
-                                </svg>
+                                <path d="M190 85 L200 75 L210 85"
+                                      stroke="#d99aaf" stroke-width="3" fill="none"/>
 
-                            </div>
+                            </svg>
 
-                            <div class="choice-info">
+                            <div class="image-card-info">
 
                                 <h3>Birthday</h3>
 
-                                <p>Fun and colorful celebration</p>
+                                <p>Colorful birthday party</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -618,46 +605,60 @@ $bookings = $stmt->get_result();
 
                     <!-- DEBUT -->
 
-                    <label class="visual-choice event-debut">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Debut"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Debut"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#f2e5fa"/>
 
-                                    <circle cx="100" cy="65" r="48" fill="#fffaff" opacity=".6"/>
+                                <circle cx="150" cy="75" r="53" fill="#fff7ff"/>
 
-                                    <path d="M100 15 L108 43 L137 45 L115 63 L122 92 L100 76 L78 92 L85 63 L63 45 L92 43 Z"
-                                          fill="#e5c7f1" stroke="#9f76b4" stroke-width="2"/>
+                                <path d="M150 18 L160 55 L200 50 L170 80
+                                         L185 120 L150 95 L115 120
+                                         L130 80 L100 50 L140 55 Z"
+                                      fill="#e8c5ef"/>
 
-                                    <path d="M100 32 L105 49 L123 51 L109 62 L113 80 L100 70 L87 80 L91 62 L77 51 L95 49 Z"
-                                          fill="#fff6dc"/>
+                                <path d="M115 140 L150 78 L185 140 Z"
+                                      fill="#a985c6"/>
 
-                                    <path d="M45 105 Q100 117 155 105"
-                                          fill="none" stroke="#b894d0" stroke-width="3"/>
+                                <path d="M130 140 L150 90 L170 140"
+                                      fill="#f8e8f7"/>
 
-                                    <circle cx="49" cy="35" r="4" fill="#d6b4e5"/>
-                                    <circle cx="150" cy="35" r="4" fill="#d6b4e5"/>
-                                    <circle cx="55" cy="80" r="3" fill="#b894d0"/>
-                                    <circle cx="145" cy="80" r="3" fill="#b894d0"/>
+                                <path d="M140 65 Q150 48 160 65"
+                                      fill="none" stroke="#d5a4df"
+                                      stroke-width="4"/>
 
-                                </svg>
+                                <g fill="#d1a1dc">
+                                    <circle cx="70" cy="45" r="4"/>
+                                    <circle cx="230" cy="40" r="4"/>
+                                    <circle cx="80" cy="115" r="5"/>
+                                    <circle cx="220" cy="115" r="5"/>
+                                </g>
 
-                            </div>
+                                <path d="M55 150 Q150 130 245 150"
+                                      fill="none" stroke="#bd94cf" stroke-width="3"/>
 
-                            <div class="choice-info">
+                            </svg>
+
+                            <div class="image-card-info">
 
                                 <h3>Debut</h3>
 
-                                <p>Elegant and memorable milestone</p>
+                                <p>Elegant 18th birthday</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -668,52 +669,59 @@ $bookings = $stmt->get_result();
 
                     <!-- ANNIVERSARY -->
 
-                    <label class="visual-choice event-anniversary">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Anniversary"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Anniversary"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#fce8ed"/>
 
-                                    <circle cx="100" cy="65" r="48" fill="#fff8fa" opacity=".6"/>
+                                <circle cx="150" cy="80" r="60" fill="#fff7f5"/>
 
-                                    <path d="M100 105
-                                             C80 89 47 69 65 43
-                                             C78 25 96 41 100 51
-                                             C111 30 136 30 145 49
-                                             C157 75 120 96 100 105Z"
-                                          fill="#e88ca5" stroke="#bd617e" stroke-width="2"/>
+                                <path d="M150 125
+                                         C125 105 85 80 105 53
+                                         C120 35 143 50 150 65
+                                         C160 43 185 35 200 53
+                                         C220 80 175 110 150 125Z"
+                                      fill="#db7695"/>
 
-                                    <path d="M100 94
-                                             C88 83 67 69 77 53
-                                             C85 43 96 51 100 60
-                                             C108 47 124 47 130 57
-                                             C140 74 115 88 100 94Z"
-                                          fill="#fff0f4"/>
+                                <path d="M150 125
+                                         C130 105 110 85 125 65
+                                         C140 48 150 72 150 72
+                                         C150 72 165 48 180 65
+                                         C195 85 170 110 150 125Z"
+                                      fill="#f6b5c8"/>
 
-                                    <path d="M42 43 Q50 30 58 43 M142 99 Q150 85 158 99"
-                                          fill="none" stroke="#d3a0b1" stroke-width="3"/>
+                                <path d="M110 140 L190 140"
+                                      stroke="#c58b9e" stroke-width="4"/>
 
-                                    <circle cx="50" cy="76" r="4" fill="#d9a3b4"/>
-                                    <circle cx="151" cy="34" r="4" fill="#d9a3b4"/>
+                                <g fill="#e8a2b8">
+                                    <circle cx="80" cy="45" r="5"/>
+                                    <circle cx="220" cy="45" r="5"/>
+                                    <circle cx="90" cy="120" r="5"/>
+                                    <circle cx="210" cy="120" r="5"/>
+                                </g>
 
-                                </svg>
+                            </svg>
 
-                            </div>
-
-                            <div class="choice-info">
+                            <div class="image-card-info">
 
                                 <h3>Anniversary</h3>
 
-                                <p>Celebrate special memories together</p>
+                                <p>Romantic celebration</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -724,49 +732,56 @@ $bookings = $stmt->get_result();
 
                     <!-- CORPORATE EVENT -->
 
-                    <label class="visual-choice event-corporate">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Corporate Event"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Corporate Event"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#e5eef7"/>
 
-                                    <circle cx="100" cy="65" r="48" fill="#f8fcff" opacity=".6"/>
+                                <rect x="45" y="25" width="210" height="115"
+                                      rx="10" fill="#fff"/>
 
-                                    <rect x="45" y="35" width="110" height="65" rx="7"
-                                          fill="#e5f1f8" stroke="#7296ae" stroke-width="2"/>
+                                <rect x="65" y="42" width="170" height="55"
+                                      rx="5" fill="#9bb9d3"/>
 
-                                    <rect x="60" y="47" width="80" height="35" rx="3"
-                                          fill="#94b8ca"/>
+                                <rect x="78" y="53" width="144" height="35"
+                                      fill="#d9e8f4"/>
 
-                                    <path d="M100 82 V95 M82 96 H118"
-                                          stroke="#577c96" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M100 88 L120 65 L140 78 L165 55 L195 85"
+                                      stroke="#7094b5" stroke-width="4"
+                                      fill="none"/>
 
-                                    <path d="M69 68 L85 58 L97 65 L116 52 L131 59"
-                                          fill="none" stroke="#fff" stroke-width="3"/>
+                                <rect x="85" y="112" width="130" height="8"
+                                      rx="4" fill="#7e9fba"/>
 
-                                    <circle cx="85" cy="58" r="3" fill="#fff"/>
-                                    <circle cx="116" cy="52" r="3" fill="#fff"/>
+                                <circle cx="70" cy="120" r="12" fill="#c2a5b3"/>
+                                <circle cx="150" cy="120" r="12" fill="#c2a5b3"/>
+                                <circle cx="230" cy="120" r="12" fill="#c2a5b3"/>
 
-                                    <path d="M38 105 H162" stroke="#7296ae" stroke-width="3"/>
+                                <path d="M70 132 L70 145 M150 132 L150 145 M230 132 L230 145"
+                                      stroke="#70889d" stroke-width="4"/>
 
-                                </svg>
+                            </svg>
 
-                            </div>
-
-                            <div class="choice-info">
+                            <div class="image-card-info">
 
                                 <h3>Corporate Event</h3>
 
-                                <p>Professional gatherings and meetings</p>
+                                <p>Professional business event</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -777,47 +792,62 @@ $bookings = $stmt->get_result();
 
                     <!-- OTHER -->
 
-                    <label class="visual-choice event-other">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="event_type"
-                               value="Other"
-                               required>
+                        <input
+                            type="radio"
+                            name="event_type"
+                            value="Other"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#e9f2e8"/>
 
-                                    <circle cx="100" cy="65" r="48" fill="#fbfaff" opacity=".6"/>
+                                <circle cx="150" cy="80" r="55" fill="#f9fff5"/>
 
-                                    <path d="M100 19 L109 49 L140 49 L115 69 L124 101 L100 82 L76 101 L85 69 L60 49 L91 49 Z"
-                                          fill="#c8b9e7" stroke="#8c77b6" stroke-width="2"/>
+                                <path d="M90 125 Q150 85 210 125"
+                                      fill="none" stroke="#9ebc9d"
+                                      stroke-width="8"/>
 
-                                    <circle cx="100" cy="62" r="15" fill="#fff5d9"/>
+                                <path d="M150 30 L160 65 L195 65
+                                         L167 85 L178 120
+                                         L150 99 L122 120
+                                         L133 85 L105 65
+                                         L140 65 Z"
+                                      fill="#b5cfae"/>
 
-                                    <path d="M100 43 V27 M100 97 V112 M80 62 H64 M120 62 H136"
-                                          stroke="#a48ac7" stroke-width="3" stroke-linecap="round"/>
+                                <circle cx="150" cy="80" r="13"
+                                        fill="#e3a9bd"/>
 
-                                </svg>
+                                <g fill="#a4c69d">
+                                    <circle cx="80" cy="40" r="6"/>
+                                    <circle cx="220" cy="40" r="6"/>
+                                    <circle cx="80" cy="115" r="6"/>
+                                    <circle cx="220" cy="115" r="6"/>
+                                </g>
 
-                            </div>
+                            </svg>
 
-                            <div class="choice-info">
+                            <div class="image-card-info">
 
                                 <h3>Other</h3>
 
-                                <p>For other special occasions</p>
+                                <p>Other special occasions</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
                         </div>
 
                     </label>
-
 
                 </div>
 
@@ -828,66 +858,75 @@ $bookings = $stmt->get_result();
                  VENUE AREA SELECTION
             ================================== -->
 
-            <div class="choice-section">
+            <div class="selection-section">
 
-                <label class="section-label">
+                <h3 class="selection-title">
                     Choose Venue Area
-                </label>
+                </h3>
 
-                <p class="choice-description">
-                    Explore the available spaces for your event.
+                <p class="selection-description">
+                    Explore our available event locations.
                 </p>
 
-
-                <div class="visual-choice-grid venue-choice-grid">
+                <div class="image-selection-grid venue-grid">
 
 
                     <!-- POOL AREA -->
 
-                    <label class="visual-choice venue-pool">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="venue_area"
-                               value="Pool Area"
-                               required>
+                        <input
+                            type="radio"
+                            name="venue_area"
+                            value="Pool Area"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#e2f5fb"/>
 
-                                    <rect x="15" y="20" width="170" height="90" rx="14"
-                                          fill="#e5f8fc"/>
+                                <circle cx="240" cy="30" r="20" fill="#f8d68e"/>
 
-                                    <circle cx="152" cy="36" r="13" fill="#f5d18c"/>
+                                <path d="M0 75 Q75 55 150 75 T300 75"
+                                      fill="#8bc9d9"/>
 
-                                    <path d="M15 65 Q45 49 75 65 T135 65 T185 65 V110 H15 Z"
-                                          fill="#65b9d0"/>
+                                <rect x="20" y="80" width="260" height="65"
+                                      rx="18" fill="#69bfd2"/>
 
-                                    <path d="M15 81 Q45 65 75 81 T135 81 T185 81"
-                                          fill="none" stroke="#fff" stroke-width="4"/>
+                                <path d="M25 100 Q70 80 110 100 T190 100 T275 100"
+                                      fill="none" stroke="#d6f6fa"
+                                      stroke-width="4"/>
 
-                                    <path d="M15 98 Q45 82 75 98 T135 98 T185 98"
-                                          fill="none" stroke="#c7edf2" stroke-width="4"/>
+                                <path d="M40 65 L40 115"
+                                      stroke="#96785d" stroke-width="5"/>
 
-                                    <path d="M40 48 L40 28 M34 28 H46"
-                                          stroke="#b58a64" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M20 65 Q40 30 60 65"
+                                      fill="#79aa83"/>
 
-                                    <path d="M31 45 Q40 35 49 45"
-                                          fill="#e2a98b"/>
+                                <path d="M230 65 L230 115"
+                                      stroke="#96785d" stroke-width="5"/>
 
-                                </svg>
+                                <path d="M205 65 Q230 25 255 65"
+                                      fill="#79aa83"/>
 
-                            </div>
+                                <path d="M0 145 L300 145"
+                                      stroke="#b8d7c2" stroke-width="8"/>
 
-                            <div class="choice-info">
+                            </svg>
+
+                            <div class="image-card-info">
 
                                 <h3>Pool Area</h3>
 
-                                <p>Relaxed outdoor setting</p>
+                                <p>Refreshing outdoor venue</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -898,50 +937,67 @@ $bookings = $stmt->get_result();
 
                     <!-- GARDEN -->
 
-                    <label class="visual-choice venue-garden">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="venue_area"
-                               value="Garden"
-                               required>
+                        <input
+                            type="radio"
+                            name="venue_area"
+                            value="Garden"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#e8f3e4"/>
 
-                                    <rect x="15" y="15" width="170" height="100" rx="14"
-                                          fill="#f1f8e9"/>
+                                <circle cx="230" cy="30" r="20" fill="#f8dc96"/>
 
-                                    <circle cx="150" cy="34" r="12" fill="#f5d78d"/>
+                                <rect x="20" y="85" width="260" height="65"
+                                      fill="#d2e8c7"/>
 
-                                    <path d="M20 98 Q100 70 180 98 V115 H20Z"
-                                          fill="#9ac68c"/>
+                                <path d="M0 110 Q80 75 150 110 T300 110"
+                                      fill="#8dbb88"/>
 
-                                    <rect x="91" y="57" width="17" height="44" rx="4"
-                                          fill="#9b7657"/>
+                                <path d="M150 110 L150 55"
+                                      stroke="#886c4e" stroke-width="8"/>
 
-                                    <circle cx="100" cy="43" r="29" fill="#83b77b"/>
-                                    <circle cx="80" cy="55" r="17" fill="#91c789"/>
-                                    <circle cx="120" cy="55" r="17" fill="#91c789"/>
+                                <circle cx="150" cy="45" r="36"
+                                        fill="#7cad79"/>
 
-                                    <circle cx="50" cy="87" r="5" fill="#e6a0ba"/>
-                                    <circle cx="65" cy="96" r="5" fill="#f3d08d"/>
-                                    <circle cx="140" cy="91" r="5" fill="#e6a0ba"/>
-                                    <circle cx="155" cy="99" r="5" fill="#f3d08d"/>
+                                <circle cx="125" cy="55" r="19"
+                                        fill="#91bd88"/>
 
-                                </svg>
+                                <circle cx="177" cy="55" r="19"
+                                        fill="#91bd88"/>
 
-                            </div>
+                                <g fill="#eaa3bd">
+                                    <circle cx="50" cy="105" r="7"/>
+                                    <circle cx="70" cy="125" r="7"/>
+                                    <circle cx="240" cy="105" r="7"/>
+                                    <circle cx="220" cy="125" r="7"/>
+                                </g>
 
-                            <div class="choice-info">
+                                <g fill="#e5c66f">
+                                    <circle cx="50" cy="105" r="3"/>
+                                    <circle cx="70" cy="125" r="3"/>
+                                    <circle cx="240" cy="105" r="3"/>
+                                    <circle cx="220" cy="125" r="3"/>
+                                </g>
+
+                            </svg>
+
+                            <div class="image-card-info">
 
                                 <h3>Garden</h3>
 
-                                <p>Fresh and natural surroundings</p>
+                                <p>Beautiful outdoor greenery</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -952,52 +1008,64 @@ $bookings = $stmt->get_result();
 
                     <!-- GRAND BALLROOM -->
 
-                    <label class="visual-choice venue-ballroom">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="venue_area"
-                               value="Grand Ballroom"
-                               required>
+                        <input
+                            type="radio"
+                            name="venue_area"
+                            value="Grand Ballroom"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#f7e8ee"/>
 
-                                    <rect x="15" y="12" width="170" height="105" rx="12"
-                                          fill="#fff8e9"/>
+                                <path d="M30 0 L75 0 L75 145 L30 145 Z"
+                                      fill="#d8a6b9"/>
 
-                                    <path d="M15 35 H185" stroke="#d7b879" stroke-width="3"/>
+                                <path d="M225 0 L270 0 L270 145 L225 145 Z"
+                                      fill="#d8a6b9"/>
 
-                                    <path d="M35 35 V85 M165 35 V85"
-                                          stroke="#c99f69" stroke-width="5"/>
+                                <path d="M30 0 Q150 75 270 0"
+                                      fill="#f4cad9"/>
 
-                                    <path d="M35 35 Q100 62 165 35"
-                                          fill="none" stroke="#e2c99b" stroke-width="3"/>
+                                <path d="M30 0 Q150 90 270 0"
+                                      fill="none" stroke="#fff"
+                                      stroke-width="5"/>
 
-                                    <path d="M100 20 V47 M83 47 H117 M87 47 L77 67 M113 47 L123 67"
-                                          stroke="#c69b56" stroke-width="3" stroke-linecap="round"/>
+                                <rect x="90" y="65" width="120" height="75"
+                                      rx="4" fill="#fff9f4"/>
 
-                                    <circle cx="100" cy="55" r="8" fill="#f3d78d"/>
+                                <rect x="115" y="40" width="70" height="30"
+                                      rx="4" fill="#e7bbcc"/>
 
-                                    <path d="M72 90 Q100 72 128 90 V108 H72Z"
-                                          fill="#dfc28c"/>
+                                <path d="M150 40 L150 20"
+                                      stroke="#c48da5" stroke-width="3"/>
 
-                                    <circle cx="65" cy="105" r="7" fill="#d8b77e"/>
-                                    <circle cx="135" cy="105" r="7" fill="#d8b77e"/>
+                                <circle cx="150" cy="15" r="9"
+                                        fill="#f4d889"/>
 
-                                </svg>
+                                <path d="M0 145 L300 145"
+                                      stroke="#c99db0" stroke-width="5"/>
 
-                            </div>
+                                <path d="M100 145 L150 105 L200 145"
+                                      fill="#f6d9e5"/>
 
-                            <div class="choice-info">
+                            </svg>
+
+                            <div class="image-card-info">
 
                                 <h3>Grand Ballroom</h3>
 
-                                <p>Spacious and elegant interior</p>
+                                <p>Elegant spacious venue</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -1008,51 +1076,57 @@ $bookings = $stmt->get_result();
 
                     <!-- FUNCTION ROOM -->
 
-                    <label class="visual-choice venue-function">
+                    <label class="image-option">
 
-                        <input type="radio"
-                               name="venue_area"
-                               value="Function Room"
-                               required>
+                        <input
+                            type="radio"
+                            name="venue_area"
+                            value="Function Room"
+                            required
+                        >
 
-                        <div class="choice-card">
+                        <div class="image-card">
 
-                            <div class="choice-art">
+                            <svg class="illustration" viewBox="0 0 300 170"
+                                 xmlns="http://www.w3.org/2000/svg">
 
-                                <svg viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="300" height="170" fill="#e8edf5"/>
 
-                                    <rect x="15" y="12" width="170" height="105" rx="12"
-                                          fill="#f7f3fb"/>
+                                <rect x="35" y="25" width="230" height="120"
+                                      rx="8" fill="#fff"/>
 
-                                    <rect x="48" y="25" width="104" height="42" rx="5"
-                                          fill="#bba7d2"/>
+                                <rect x="60" y="40" width="180" height="48"
+                                      rx="5" fill="#aec1d7"/>
 
-                                    <rect x="57" y="32" width="86" height="27" rx="3"
-                                          fill="#e8e0f2"/>
+                                <rect x="70" y="48" width="160" height="32"
+                                      fill="#d8e7f5"/>
 
-                                    <path d="M100 59 V68 M80 68 H120"
-                                          stroke="#967ead" stroke-width="3"/>
+                                <path d="M90 100 L210 100"
+                                      stroke="#829bb7" stroke-width="5"/>
 
-                                    <rect x="43" y="82" width="114" height="12" rx="5"
-                                          fill="#9c83b5"/>
+                                <path d="M100 100 L100 125 M200 100 L200 125"
+                                      stroke="#829bb7" stroke-width="4"/>
 
-                                    <path d="M55 94 V108 M145 94 V108"
-                                          stroke="#806b96" stroke-width="4"/>
+                                <rect x="115" y="105" width="70" height="20"
+                                      rx="4" fill="#c2a4b5"/>
 
-                                    <circle cx="34" cy="78" r="9" fill="#d6c8e6"/>
-                                    <circle cx="166" cy="78" r="9" fill="#d6c8e6"/>
+                                <circle cx="65" cy="120" r="11" fill="#d6afc0"/>
+                                <circle cx="235" cy="120" r="11" fill="#d6afc0"/>
 
-                                </svg>
+                                <path d="M0 145 L300 145"
+                                      stroke="#b7c6d8" stroke-width="5"/>
 
-                            </div>
+                            </svg>
 
-                            <div class="choice-info">
+                            <div class="image-card-info">
 
                                 <h3>Function Room</h3>
 
-                                <p>Comfortable indoor gathering space</p>
+                                <p>Comfortable indoor venue</p>
 
-                                <span class="choice-check">✓ Selected</span>
+                                <div class="selected-indicator">
+                                    ✓ SELECTED
+                                </div>
 
                             </div>
 
@@ -1060,17 +1134,16 @@ $bookings = $stmt->get_result();
 
                     </label>
 
-
                 </div>
 
             </div>
 
 
             <!-- =================================
-                 DATE, TIME, GUESTS AND PACKAGE
+                 OTHER BOOKING DETAILS
             ================================== -->
 
-            <div class="form-grid">
+            <div class="booking-extra-fields">
 
                 <div>
 
@@ -1085,7 +1158,6 @@ $bookings = $stmt->get_result();
 
                 </div>
 
-
                 <div>
 
                     <label>Event time</label>
@@ -1097,7 +1169,6 @@ $bookings = $stmt->get_result();
                     >
 
                 </div>
-
 
                 <div>
 
@@ -1113,7 +1184,6 @@ $bookings = $stmt->get_result();
                     >
 
                 </div>
-
 
                 <div>
 
@@ -1146,7 +1216,10 @@ $bookings = $stmt->get_result();
             </div>
 
 
-            <button class="btn primary" type="submit">
+            <button
+                class="btn primary booking-submit"
+                type="submit"
+            >
                 Submit reservation request
             </button>
 
@@ -1156,15 +1229,12 @@ $bookings = $stmt->get_result();
 
 
     <!-- =================================
-         CUSTOMER BOOKING SUMMARY
+         BOOKING SUMMARY
     ================================== -->
 
     <section class="content-card">
 
-        <h2 class="booking-summary-title">
-            My booking summary & status
-        </h2>
-
+        <h2>My booking summary & status</h2>
 
         <?php if ($bookings->num_rows === 0): ?>
 
@@ -1191,7 +1261,6 @@ $bookings = $stmt->get_result();
 
                     </thead>
 
-
                     <tbody>
 
                         <?php while ($row = $bookings->fetch_assoc()): ?>
@@ -1208,36 +1277,34 @@ $bookings = $stmt->get_result();
 
                                 </td>
 
-
                                 <td>
 
                                     <?= e($row["event_date"]) ?>
 
                                     <small>
-                                        <?= e(date("g:i A", strtotime($row["event_time"]))) ?>
+                                        <?= e(date(
+                                            "g:i A",
+                                            strtotime($row["event_time"])
+                                        )) ?>
                                     </small>
 
                                 </td>
-
 
                                 <td>
                                     <?= e($row["guest_count"]) ?>
                                 </td>
 
-
                                 <td>
                                     <?= e($row["package_name"] ?: "—") ?>
                                 </td>
 
-
                                 <td>
 
-                                    <span class="status">
+                                    <span class="booking-status-label">
                                         <?= e($row["booking_status"] ?: "Pending") ?>
                                     </span>
 
                                 </td>
-
 
                                 <td>
 
@@ -1281,11 +1348,10 @@ $bookings = $stmt->get_result();
 
 <footer class="site-footer">
 
-    © <?= date("Y") ?> CED Event & Catering Services
-    — In-person payment policy applies.
+    © <?= date("Y") ?> CED Event & Catering Services —
+    In-person payment policy applies.
 
 </footer>
-
 
 </body>
 </html>
