@@ -16,6 +16,7 @@ $customerId = (int)$_SESSION["customer_id"];
 $message = "";
 $messageType = "success";
 
+/* EVENT TYPES */
 $eventTypes = [
     "Wedding" => [
         "description" => "Elegant wedding celebration",
@@ -43,6 +44,7 @@ $eventTypes = [
     ]
 ];
 
+/* VENUE AREAS */
 $venueAreas = [
     "Pool Area" => [
         "description" => "Refreshing outdoor venue",
@@ -62,7 +64,7 @@ $venueAreas = [
     ]
 ];
 
-// SUBMIT BOOKING
+/* SUBMIT BOOKING */
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $eventType = trim($_POST["event_type"] ?? "");
@@ -86,17 +88,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $guestCount < 1 ||
         $packageName === ""
     ) {
-        $_SESSION["flash_message"] = "Please complete all required fields.";
+
+        $_SESSION["flash_message"] =
+            "Please complete all required fields.";
+
         $_SESSION["flash_type"] = "error";
 
     } elseif ($eventDate < date("Y-m-d")) {
 
-        $_SESSION["flash_message"] = "Please choose today or a future date.";
+        $_SESSION["flash_message"] =
+            "Please choose today or a future date.";
+
         $_SESSION["flash_type"] = "error";
 
     } else {
 
-        // CHECK VENUE AVAILABILITY
+        /* CHECK VENUE AVAILABILITY */
         $checkStmt = $conn->prepare(
             "SELECT booking_id FROM bookings
              WHERE venue_area = ?
@@ -124,6 +131,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         } else {
 
+            /* SAVE BOOKING */
             $stmt = $conn->prepare(
                 "INSERT INTO bookings
                 (
@@ -152,11 +160,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             );
 
             if ($stmt->execute()) {
+
                 $_SESSION["flash_message"] =
                     "Reservation submitted successfully! Please settle your down payment in person at CED Event & Catering Services.";
 
                 $_SESSION["flash_type"] = "success";
+
             } else {
+
                 $_SESSION["flash_message"] =
                     "Unable to save booking. Please try again.";
 
@@ -173,8 +184,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     exit;
 }
 
-// FLASH MESSAGE
+/* FLASH MESSAGE */
 if (isset($_SESSION["flash_message"])) {
+
     $message = $_SESSION["flash_message"];
     $messageType = $_SESSION["flash_type"];
 
@@ -184,7 +196,7 @@ if (isset($_SESSION["flash_message"])) {
     );
 }
 
-// GET CUSTOMER BOOKINGS
+/* GET CUSTOMER BOOKINGS */
 $stmt = $conn->prepare(
     "SELECT
         booking_id,
@@ -211,211 +223,20 @@ $bookings = $stmt->get_result();
 <html lang="en">
 
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>CED Event & Catering Services | My Bookings</title>
+    <title>CED Event & Catering Services | Book Event</title>
 
-<link rel="stylesheet" href="style.css">
-
-<style>
-
-/* PAGE */
-.page-wrap {
-    max-width: 1100px;
-    margin: auto;
-    padding: 35px 20px;
-}
-
-.selection-section {
-    margin-bottom: 30px;
-}
-
-.selection-title {
-    color: #573e49;
-    font-size: 19px;
-    font-weight: 700;
-    margin-bottom: 8px;
-}
-
-.selection-description {
-    color: #927c87;
-    font-size: 13px;
-    margin-bottom: 18px;
-}
-
-/* IMAGE GRID */
-.image-selection-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-}
-
-.venue-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-/* RADIO CARD */
-.image-option {
-    display: block;
-    cursor: pointer;
-    min-width: 0;
-}
-
-.image-option input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.image-card {
-    height: 100%;
-    overflow: hidden;
-    border: 2px solid #f0dfe6;
-    border-radius: 15px;
-    background: white;
-    transition: 0.25s ease;
-}
-
-.image-card:hover {
-    border-color: #d28aa4;
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(160, 94, 119, 0.15);
-}
-
-.image-option input:checked + .image-card {
-    border: 3px solid #c46f90;
-    background: #fff0f5;
-    box-shadow: 0 7px 20px rgba(196, 111, 144, 0.18);
-}
-
-.image-option input:focus-visible + .image-card {
-    outline: 3px solid #b85f83;
-    outline-offset: 3px;
-}
-
-/* ACTUAL PHOTOGRAPHS */
-.card-photo {
-    width: 100%;
-    height: 155px;
-    display: block;
-    object-fit: cover;
-}
-
-.venue-grid .card-photo {
-    height: 190px;
-}
-
-.image-card-info {
-    padding: 12px 8px;
-    text-align: center;
-}
-
-.image-card-info h3 {
-    color: #634651;
-    font-size: 14px;
-    margin: 0;
-}
-
-.image-card-info p {
-    color: #a18a95;
-    font-size: 11px;
-    margin: 5px 0 0;
-}
-
-.selected-indicator {
-    display: none;
-    color: #c46f90;
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 8px;
-}
-
-.image-option input:checked + .image-card
-.selected-indicator {
-    display: block;
-}
-
-/* BOOKING FIELDS */
-.booking-extra-fields {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px;
-    margin: 25px 0;
-}
-
-.booking-extra-fields label {
-    display: block;
-    color: #634651;
-    font-weight: 600;
-    margin-bottom: 9px;
-}
-
-.booking-extra-fields input,
-.booking-extra-fields select {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* SUBMIT */
-.booking-submit {
-    margin-top: 10px;
-}
-
-/* STATUS */
-.booking-status-label {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    background: #fbe7ef;
-    color: #a34f70;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-
-    .image-selection-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .venue-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .venue-grid .card-photo {
-        height: 140px;
-    }
-
-    .booking-extra-fields {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 420px) {
-
-    .card-photo {
-        height: 110px;
-    }
-
-    .venue-grid .card-photo {
-        height: 110px;
-    }
-
-    .image-card-info {
-        padding: 10px 5px;
-    }
-}
-
-</style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="floral-booking">
 
 <header class="site-header">
 
     <a class="brand" href="booking.php">
+        <span class="brand-crown">✿</span>
         CED <span>Event & Catering Services</span>
     </a>
 
@@ -435,20 +256,29 @@ $bookings = $stmt->get_result();
 
 <main class="page-wrap">
 
-    <section class="page-heading">
+    <!-- PAGE INTRODUCTION -->
 
-        <p class="eyebrow">RESERVATION SYSTEM</p>
+    <section class="page-heading floral-heading">
 
-        <h1>Book your <span>special event</span></h1>
+        <p class="eyebrow">✦ PLAN • BOOK • CELEBRATE ✦</p>
+
+        <h1>
+            Book your <span>special event</span>
+        </h1>
 
         <p>
-            Choose your preferred event type and venue area.
-            Explore our event photographs to help you decide.
-            A down payment settled in person is required
-            to confirm your schedule.
+            Let's make your special moments unforgettable.
+            Choose your preferred event type, venue, date,
+            and package with CED Event & Catering Services.
         </p>
 
+        <div class="heading-decoration">
+            ♡ &nbsp; ✿ &nbsp; ♡
+        </div>
+
     </section>
+
+    <!-- ALERT MESSAGE -->
 
     <?php if ($message !== ""): ?>
 
@@ -458,9 +288,23 @@ $bookings = $stmt->get_result();
 
     <?php endif; ?>
 
-    <section class="content-card">
+    <!-- BOOKING FORM -->
 
-        <h2>Event booking form</h2>
+    <section class="content-card booking-main-card">
+
+        <div class="booking-card-heading">
+
+            <span class="heading-flower">✿</span>
+
+            <div>
+                <h2>Event Booking Form</h2>
+
+                <p class="muted">
+                    Select your event and preferred venue below.
+                </p>
+            </div>
+
+        </div>
 
         <form method="POST" action="booking.php" class="booking-form">
 
@@ -468,13 +312,21 @@ $bookings = $stmt->get_result();
 
             <div class="selection-section">
 
-                <h3 class="selection-title">
-                    Choose Event Type
-                </h3>
+                <div class="selection-heading">
 
-                <p class="selection-description">
-                    Select the event that you are planning.
-                </p>
+                    <span class="section-number">01</span>
+
+                    <div>
+                        <h3 class="selection-title">
+                            Choose Your Event
+                        </h3>
+
+                        <p class="selection-description">
+                            What special occasion are you planning?
+                        </p>
+                    </div>
+
+                </div>
 
                 <div class="image-selection-grid">
 
@@ -491,12 +343,18 @@ $bookings = $stmt->get_result();
 
                             <div class="image-card">
 
-                                <img
-                                    class="card-photo"
-                                    src="<?= e($details["image"]) ?>"
-                                    alt="<?= e($name) ?> event"
-                                    loading="lazy"
-                                >
+                                <div class="photo-container">
+
+                                    <img
+                                        class="card-photo"
+                                        src="<?= e($details["image"]) ?>"
+                                        alt="<?= e($name) ?> event"
+                                        loading="lazy"
+                                    >
+
+                                    <span class="photo-heart">♡</span>
+
+                                </div>
 
                                 <div class="image-card-info">
 
@@ -524,13 +382,21 @@ $bookings = $stmt->get_result();
 
             <div class="selection-section">
 
-                <h3 class="selection-title">
-                    Choose Venue Area
-                </h3>
+                <div class="selection-heading">
 
-                <p class="selection-description">
-                    Explore our available event locations.
-                </p>
+                    <span class="section-number">02</span>
+
+                    <div>
+                        <h3 class="selection-title">
+                            Choose Your Venue
+                        </h3>
+
+                        <p class="selection-description">
+                            Discover the perfect location for your celebration.
+                        </p>
+                    </div>
+
+                </div>
 
                 <div class="image-selection-grid venue-grid">
 
@@ -547,12 +413,18 @@ $bookings = $stmt->get_result();
 
                             <div class="image-card">
 
-                                <img
-                                    class="card-photo"
-                                    src="<?= e($details["image"]) ?>"
-                                    alt="<?= e($name) ?> venue"
-                                    loading="lazy"
-                                >
+                                <div class="photo-container">
+
+                                    <img
+                                        class="card-photo"
+                                        src="<?= e($details["image"]) ?>"
+                                        alt="<?= e($name) ?> venue"
+                                        loading="lazy"
+                                    >
+
+                                    <span class="photo-heart">♡</span>
+
+                                </div>
 
                                 <div class="image-card-info">
 
@@ -576,86 +448,108 @@ $bookings = $stmt->get_result();
 
             </div>
 
-            <!-- OTHER DETAILS -->
+            <!-- EVENT DETAILS -->
 
-            <div class="booking-extra-fields">
+            <div class="selection-section details-section">
 
-                <div>
+                <div class="selection-heading">
 
-                    <label>Event date</label>
+                    <span class="section-number">03</span>
 
-                    <input
-                        type="date"
-                        name="event_date"
-                        min="<?= date("Y-m-d") ?>"
-                        required
-                    >
+                    <div>
+                        <h3 class="selection-title">
+                            Event Details
+                        </h3>
 
-                </div>
-
-                <div>
-
-                    <label>Event time</label>
-
-                    <input
-                        type="time"
-                        name="event_time"
-                        required
-                    >
+                        <p class="selection-description">
+                            Complete your reservation information.
+                        </p>
+                    </div>
 
                 </div>
 
-                <div>
+                <div class="booking-extra-fields">
 
-                    <label>Number of guests</label>
+                    <div>
+                        <label>Event Date</label>
 
-                    <input
-                        type="number"
-                        name="guest_count"
-                        min="1"
-                        max="10000"
-                        placeholder="e.g. 100"
-                        required
-                    >
+                        <input
+                            type="date"
+                            name="event_date"
+                            min="<?= date("Y-m-d") ?>"
+                            required
+                        >
+                    </div>
 
-                </div>
+                    <div>
+                        <label>Event Time</label>
 
-                <div>
+                        <input
+                            type="time"
+                            name="event_time"
+                            required
+                        >
+                    </div>
 
-                    <label>Package & Cost</label>
+                    <div>
+                        <label>Number of Guests</label>
 
-                    <select name="package_name" required>
+                        <input
+                            type="number"
+                            name="guest_count"
+                            min="1"
+                            max="10000"
+                            placeholder="Enter number of guests"
+                            required
+                        >
+                    </div>
 
-                        <option value="">Choose package</option>
+                    <div>
+                        <label>Package & Cost</label>
 
-                        <option value="Basic Package - ₱10,000">
-                            Basic Package - ₱10,000
-                        </option>
+                        <select name="package_name" required>
 
-                        <option value="Classic Package - ₱20,000">
-                            Classic Package - ₱20,000
-                        </option>
+                            <option value="">Choose your package</option>
 
-                        <option value="Premium Package - ₱35,000">
-                            Premium Package - ₱35,000
-                        </option>
+                            <option value="Basic Package - ₱10,000">
+                                Basic Package - ₱10,000
+                            </option>
 
-                        <option value="Custom Package - ₱50,000">
-                            Custom Package - ₱50,000
-                        </option>
+                            <option value="Classic Package - ₱20,000">
+                                Classic Package - ₱20,000
+                            </option>
 
-                    </select>
+                            <option value="Premium Package - ₱35,000">
+                                Premium Package - ₱35,000
+                            </option>
+
+                            <option value="Custom Package - ₱50,000">
+                                Custom Package - ₱50,000
+                            </option>
+
+                        </select>
+                    </div>
 
                 </div>
 
             </div>
 
-            <button
-                class="btn primary booking-submit"
-                type="submit"
-            >
-                Submit reservation request
-            </button>
+            <!-- SUBMIT -->
+
+            <div class="booking-submit-area">
+
+                <p>
+                    ♡ Your dream event starts with one reservation.
+                </p>
+
+                <button
+                    class="btn primary booking-submit"
+                    type="submit"
+                >
+                    Submit Reservation Request &nbsp; →
+                </button>
+
+            </div>
 
         </form>
 
@@ -663,15 +557,33 @@ $bookings = $stmt->get_result();
 
     <!-- BOOKING SUMMARY -->
 
-    <section class="content-card">
+    <section class="content-card booking-summary-card">
 
-        <h2>My booking summary & status</h2>
+        <div class="booking-card-heading">
+
+            <span class="heading-flower">♡</span>
+
+            <div>
+                <h2>My Booking Summary</h2>
+
+                <p class="muted">
+                    View your reservation details and booking status.
+                </p>
+            </div>
+
+        </div>
 
         <?php if ($bookings->num_rows === 0): ?>
 
-            <p class="muted">
-                You don't have any reservations yet.
-            </p>
+            <div class="empty-bookings">
+                <span>♡</span>
+
+                <h3>No bookings yet</h3>
+
+                <p class="muted">
+                    Your reservations will appear here once submitted.
+                </p>
+            </div>
 
         <?php else: ?>
 
@@ -680,16 +592,14 @@ $bookings = $stmt->get_result();
                 <table>
 
                     <thead>
-
                         <tr>
-                            <th>Event & Venue Area</th>
+                            <th>Event & Venue</th>
                             <th>Date & Time</th>
                             <th>Guests</th>
                             <th>Package & Cost</th>
                             <th>Booking Status</th>
                             <th>Payment</th>
                         </tr>
-
                     </thead>
 
                     <tbody>
@@ -702,7 +612,7 @@ $bookings = $stmt->get_result();
                                     <?= e($row["event_type"]) ?>
 
                                     <small>
-                                        Area: <?= e($row["venue_area"]) ?>
+                                        Venue: <?= e($row["venue_area"]) ?>
                                     </small>
                                 </td>
 
@@ -746,9 +656,7 @@ $bookings = $stmt->get_result();
                                     echo e($payStatus);
                                     ?>
 
-                                    <small class="muted">
-                                        Pay in person
-                                    </small>
+                                    <small>Pay in person</small>
 
                                 </td>
 
@@ -766,18 +674,15 @@ $bookings = $stmt->get_result();
 
     </section>
 
+    <!-- FOOTER -->
+
+    <div class="booking-footer">
+        <span>✿</span>
+        <p>CED Event & Catering Services</p>
+        <small>Making every celebration unforgettable ♡</small>
+    </div>
+
 </main>
-
-<footer class="site-footer">
-
-    © <?= date("Y") ?> CED Event & Catering Services —
-    In-person payment policy applies.
-
-</footer>
 
 </body>
 </html>
-
-<?php
-$stmt->close();
-?>
