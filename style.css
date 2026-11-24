@@ -537,3 +537,127 @@ td small {
         display: none;
     }
 }
+
+/* ==========================================
+   BOOKING PAGE - PINK FLORAL BACKGROUND
+   Elegant Rose • Silk • Wedding Theme
+========================================== */
+
+body:has(.booking-form) {
+    position: relative;
+    min-height: 100vh;
+    background:
+        radial-gradient(ellipse at 5% 20%,
+            rgba(255,255,255,.8), transparent 38%),
+        radial-gradient(ellipse at 95% 85%,
+            rgba(236,177,197,.5), transparent 40%),
+        linear-gradient(135deg,
+            #fff0f4 0%,
+            #f8dce6 45%,
+            #fff5f7 100%);
+    background-attachment: fixed;
+}
+
+/* Decorative floral background */
+body:has(.booking-form)::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse at 0% 0%,
+            rgba(255,255,255,.85), transparent 35%),
+        radial-gradient(ellipse at 100% 100%,
+            rgba(216,139,165,.30), transparent 35%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500' viewBox='0 0 500 500'%3E%3Cg fill='%23e5a3b8' fill-opacity='.35'%3E%3Cellipse cx='90' cy='100' rx='18' ry='42' transform='rotate(-40 90 100)'/%3E%3Cellipse cx='125' cy='75' rx='18' ry='42' transform='rotate(40 125 75)'/%3E%3Cellipse cx='110' cy='120' rx='18' ry='42' transform='rotate(90 110 120)'/%3E%3Cellipse cx='350' cy='350' rx='18' ry='42' transform='rotate(-40 350 350)'/%3E%3Cellipse cx='390' cy='330' rx='18' ry='42' transform='rotate(40 390 330)'/%3E%3C/g%3E%3Cg fill='%23b86f86' fill-opacity='.45'%3E%3Ccircle cx='110' cy='100' r='13'/%3E%3Ccircle cx='370' cy='340' r='13'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: cover, cover, 500px 500px;
+}
+
+/* Silk curtain effect */
+body:has(.booking-form)::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(115deg,
+            transparent 0 18%,
+            rgba(255,255,255,.55) 19%,
+            rgba(239,188,204,.20) 23%,
+            transparent 30%),
+        linear-gradient(245deg,
+            transparent 0 75%,
+            rgba(255,255,255,.55) 78%,
+            rgba(235,177,195,.20) 82%,
+            transparent 90%);
+}
+
+/* Keep booking content above decoration */
+body:has(.booking-form) .page-wrap {
+    position: relative;
+    z-index: 1;
+}
+
+/* Booking form main card */
+.booking-form,
+body:has(.booking-form) .content-card {
+    background: rgba(255, 252, 253, .94);
+    backdrop-filter: blur(14px);
+    border: 1px solid #f0ccd8;
+    border-radius: 22px;
+    box-shadow: 0 15px 45px rgba(155, 91, 115, .16);
+}
+
+/* Booking headings */
+.booking-form h1,
+.booking-form h2,
+.booking-form h3 {
+    font-family: 'Playfair Display', serif;
+    color: #963e5e;
+}
+
+/* Form labels */
+.booking-form label {
+    color: #754253;
+    font-weight: 700;
+}
+
+/* Input fields */
+.booking-form input,
+.booking-form select {
+    background: #fffafb;
+    border: 1px solid #edcbd6;
+    border-radius: 11px;
+}
+
+.booking-form input:focus,
+.booking-form select:focus {
+    border-color: #c97895;
+    box-shadow: 0 0 0 3px rgba(207,140,161,.18);
+}
+
+/* Pink buttons */
+.booking-form .btn.primary {
+    background: linear-gradient(135deg, #d58ba4, #ad5877);
+    color: white;
+    box-shadow: 0 7px 18px rgba(184,111,134,.25);
+}
+
+.booking-form .btn.primary:hover {
+    background: linear-gradient(135deg, #bd6e89, #91425e);
+    transform: translateY(-2px);
+}
+
+/* Responsive background */
+@media(max-width: 768px) {
+    body:has(.booking-form)::before {
+        background-size: cover, cover, 300px 300px;
+    }
+
+    body:has(.booking-form) .page-wrap {
+        width: 94%;
+        padding-top: 25px;
+    }
+    }
