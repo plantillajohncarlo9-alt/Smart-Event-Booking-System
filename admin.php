@@ -167,6 +167,7 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
     <link rel="stylesheet" href="style.css">
 
     <style>
+
         /* ACTION BUTTONS */
         .action-buttons {
             display: flex;
@@ -179,8 +180,14 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
 
         .action-buttons form {
             margin: 0;
+            display: inline-flex;
         }
 
+        .action-buttons button {
+            white-space: nowrap;
+        }
+
+        /* DELETE BUTTON */
         .delete-btn {
             background: #df4967;
             color: white;
@@ -304,6 +311,7 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
                 padding: 25px 18px;
             }
         }
+
     </style>
 </head>
 
@@ -316,11 +324,13 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
     </a>
 
     <?php if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true): ?>
+
         <nav class="nav-links">
             <a class="btn outline small" href="admin.php?logout=1">
                 Log out
             </a>
         </nav>
+
     <?php endif; ?>
 
 </header>
@@ -524,17 +534,7 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
 
                                 <div class="action-buttons">
 
-                                    <!-- DELETE BUTTON - LEFT -->
-
-                                    <button
-                                        type="button"
-                                        class="delete-btn"
-                                        onclick="openDeleteModal(<?= $id ?>)"
-                                    >
-                                        Delete
-                                    </button>
-
-                                    <!-- UPDATE BUTTON - RIGHT -->
+                                    <!-- UPDATE BUTTON - LEFT -->
 
                                     <form
                                         method="POST"
@@ -551,6 +551,16 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
                                         </button>
 
                                     </form>
+
+                                    <!-- DELETE BUTTON - RIGHT -->
+
+                                    <button
+                                        type="button"
+                                        class="delete-btn"
+                                        onclick="openDeleteModal(<?= $id ?>)"
+                                    >
+                                        Delete
+                                    </button>
 
                                 </div>
 
@@ -636,48 +646,41 @@ if (isset($_SESSION["admin_logged_in"]) && $_SESSION["admin_logged_in"] === true
 
 <script>
 
-    // OPEN DELETE MODAL
+// OPEN DELETE MODAL
+function openDeleteModal(bookingId) {
 
-    function openDeleteModal(bookingId) {
+    document.getElementById("selectedBookingId").value = bookingId;
 
-        document.getElementById("selectedBookingId").value = bookingId;
+    document.getElementById("deleteBookingId").textContent = "#" + bookingId;
 
-        document.getElementById("deleteBookingId").textContent = "#" + bookingId;
+    document.getElementById("deleteModal").classList.add("show");
 
-        document.getElementById("deleteModal").classList.add("show");
+}
 
+// CLOSE DELETE MODAL
+function closeDeleteModal() {
+
+    document.getElementById("deleteModal").classList.remove("show");
+
+}
+
+// CLOSE WHEN CLICKING OUTSIDE THE MODAL
+document.getElementById("deleteModal").addEventListener("click", function(event) {
+
+    if (event.target === this) {
+        closeDeleteModal();
     }
 
+});
 
-    // CLOSE DELETE MODAL
+// CLOSE USING ESCAPE KEY
+document.addEventListener("keydown", function(event) {
 
-    function closeDeleteModal() {
-
-        document.getElementById("deleteModal").classList.remove("show");
-
+    if (event.key === "Escape") {
+        closeDeleteModal();
     }
 
-
-    // CLOSE WHEN CLICKING OUTSIDE THE MODAL
-
-    document.getElementById("deleteModal").addEventListener("click", function(event) {
-
-        if (event.target === this) {
-            closeDeleteModal();
-        }
-
-    });
-
-
-    // CLOSE USING ESCAPE KEY
-
-    document.addEventListener("keydown", function(event) {
-
-        if (event.key === "Escape") {
-            closeDeleteModal();
-        }
-
-    });
+});
 
 </script>
 
