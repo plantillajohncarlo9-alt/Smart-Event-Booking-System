@@ -116,6 +116,11 @@
             font-weight: 600;
         }
 
+        .toast-msg.error {
+            background: #fde2e7;
+            color: #a11d38;
+        }
+
         .table-wrap {
             width: 100%;
             overflow-x: auto;
@@ -195,6 +200,12 @@
             background: #924960;
         }
 
+        .btn-update:disabled,
+        .btn-delete:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-delete {
             background: #d94e6a;
             color: #ffffff;
@@ -251,7 +262,7 @@
                             </td>
                         </tr>
 
-                        <tr th:each="b : ${bookings}" th:attr="data-id='#' + ${b.id}">
+                        <tr th:each="b : ${bookings}" th:attr="data-id=${b.id}">
                             <td><strong th:text="'#' + ${b.id}">#1</strong></td>
                             <td>
                                 <strong th:text="${b.customerName}">Guest Customer</strong>
@@ -297,29 +308,77 @@
     </div>
 
     <script>
-        function showToast(message) {
+        function showToast(message, isError = false) {
             const toast = document.getElementById('toastMsg');
             toast.textContent = message;
+            toast.classList.toggle('error', isError);
             toast.style.display = 'inline-block';
             clearTimeout(window.toastTimer);
             window.toastTimer = setTimeout(() => {
                 toast.style.display = 'none';
-            }, 2600);
+            }, 3000);
         }
 
-        function updateRow(btn) {
+        async function updateRow(btn) {
             const row = btn.closest('tr');
             const id = row.dataset.id;
-            const payment = row.querySelector('.payment-select').value;
-            const status = row.querySelector('.booking-select').value;
-            showToast(`Updated ${id}: Payment = ${payment}, Status = ${status}`);
+            const paymentStatus = row.querySelector('.payment-select').value;
+            const bookingStatus = row.querySelector('.booking-select').value;
+
+            btn.disabled = true;
+            try {
+                const params = new URLSearchParams({
+                    id: id,
+                    paymentStatus: paymentStatus,
+                    bookingStatus: bookingStatus
+                });
+
+                const response = await fetch('/admin/bookings/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    },
+                    body: params.toString()
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                showToast(`Updated #${id}: Payment = ${paymentStatus}, Status = ${bookingStatus}`);
+            } catch (err) {
+                showToast(`Failed to update #${id} (${err.message}). Check controller mapping.`, true);
+            } finally {
+                btn.disabled = false;
+            }
         }
 
-        function deleteRow(btn) {
+        async function deleteRow(btn) {
             const row = btn.closest('tr');
             const id = row.dataset.id;
-            row.remove();
-            showToast(`Deleted booking ${id}`);
+
+            btn.disabled = true;
+            try {
+                const params = new URLSearchParams({ id: id });
+
+                const response = await fetch('/admin/bookings/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    },
+                    body: params.toString()
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                row.remove();
+                showToast(`Deleted booking #${id}`);
+            } catch (err) {
+                showToast(`Failed to delete #${id} (${err.message}). Check controller mapping.`, true);
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
