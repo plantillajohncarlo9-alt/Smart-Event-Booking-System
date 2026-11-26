@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 public class HomeController {
@@ -95,5 +96,29 @@ public class HomeController {
         List<Booking> bookings = bookingRepository.findAllByOrderByIdDesc();
         model.addAttribute("bookings", bookings);
         return "admin-dashboard";
+    }
+
+    @PostMapping("/admin/bookings/update")
+    @ResponseBody
+    public ResponseEntity<String> updateBookingStatus(
+            @RequestParam Long id,
+            @RequestParam String paymentStatus,
+            @RequestParam String bookingStatus) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found"));
+        booking.setPaymentStatus(paymentStatus);
+        booking.setBookingStatus(bookingStatus);
+        bookingRepository.save(booking);
+        return ResponseEntity.ok("OK");
+    }
+
+    @PostMapping("/admin/bookings/delete")
+    @ResponseBody
+    public ResponseEntity<String> deleteBooking(@RequestParam Long id) {
+        if (!bookingRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found");
+        }
+        bookingRepository.deleteById(id);
+        return ResponseEntity.ok("OK");
     }
 }
