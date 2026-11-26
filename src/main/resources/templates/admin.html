@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Moments - Admin Sign In</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 12% 15%, #f6dce2 0%, transparent 28%),
+                        radial-gradient(circle at 88% 85%, #f4d6de 0%, transparent 32%),
+                        linear-gradient(135deg, #fdf3f6 0%, #f9e8ee 100%);
+            color: #4a2e38;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #4a2e38;
+            text-decoration: none;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #8f5769;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .center-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #fffdfd;
+            border-radius: 20px;
+            padding: 2.2rem 2rem;
+            box-shadow: 0 16px 40px rgba(138, 74, 95, 0.12);
+            border: 1px solid #f3dce3;
+        }
+
+        .login-card h1 {
+            font-size: 1.45rem;
+            color: #3d242d;
+            margin-bottom: 0.35rem;
+        }
+
+        .login-card p.subtitle {
+            font-size: 0.85rem;
+            color: #8b6c76;
+            margin-bottom: 1.5rem;
+        }
+
+        .field-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .field-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #5e3e49;
+            margin-bottom: 0.4rem;
+        }
+
+        .field-group input {
+            width: 100%;
+            padding: 0.72rem 0.9rem;
+            border-radius: 10px;
+            border: 1px solid #e5c9d2;
+            background: #eef4ff;
+            color: #2f2228;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .field-group input:focus {
+            border-color: #b96d84;
+            background: #ffffff;
+        }
+
+        .btn-admin {
+            width: 100%;
+            margin-top: 0.4rem;
+            padding: 0.82rem 1rem;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #c67d93 0%, #a95e76 100%);
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(169, 94, 118, 0.24);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.75rem;
+            color: #9e7e88;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/admin" class="brand">Golden Moments Admin Panel</a>
+        <a href="/" class="back-link">&lt;- Back to Homepage</a>
+    </header>
+
+    <div class="center-wrap">
+        <div class="login-card">
+            <h1>Admin Sign In</h1>
+            <p class="subtitle">Enter your admin credentials to manage bookings.</p>
+
+            <form action="/admin/login" method="post">
+                <div class="field-group">
+                    <label for="username">Admin Username / Email</label>
+                    <input type="text" id="username" name="username" value="admin@gmail.com" required>
+                </div>
+
+                <div class="field-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" value="admin123" required>
+                </div>
+
+                <button type="submit" class="btn-admin">Log In as Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        (c) 2026 Golden Moments Event and Catering Services - Admin Panel
+    </footer>
+</body>
+</html>

@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Moments – Manage Event Reservations &amp; Payments</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 15%, #f6dce2 0%, transparent 28%),
+                        radial-gradient(circle at 90% 85%, #f4d6de 0%, transparent 32%),
+                        linear-gradient(135deg, #fdf3f6 0%, #f9e8ee 100%);
+            color: #4a2e38;
+            padding-bottom: 3rem;
+        }
+
+        header {
+            background: #fffdfd;
+            padding: 0.9rem 4%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #efd5de;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4a2e38;
+            text-decoration: none;
+        }
+
+        .logout-btn {
+            text-decoration: none;
+            color: #7a4b5a;
+            border: 1px solid #e4c5cf;
+            background: #fff;
+            padding: 0.32rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #fdf0f4;
+        }
+
+        .page-heading {
+            text-align: center;
+            margin: 2rem auto 1.3rem;
+            padding: 0 1rem;
+        }
+
+        .page-heading .eyebrow {
+            font-size: 0.68rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #9b7783;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+
+        .page-heading h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #3d242d;
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .panel-card {
+            background: #fffdfd;
+            border-radius: 18px;
+            padding: 1.6rem;
+            border: 1px solid #f3dce3;
+            box-shadow: 0 14px 36px rgba(138, 74, 95, 0.1);
+        }
+
+        .panel-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .panel-top h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #3d242d;
+        }
+
+        .toast-msg {
+            display: none;
+            padding: 0.45rem 0.85rem;
+            border-radius: 10px;
+            background: #fce8ef;
+            color: #8f3b57;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 920px;
+        }
+
+        thead th {
+            background: #f8e3ea;
+            color: #6b3f4e;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.75rem 0.55rem;
+            text-align: left;
+            border-bottom: 1px solid #edd0d9;
+        }
+
+        tbody td {
+            padding: 0.75rem 0.55rem;
+            border-bottom: 1px solid #f4e2e8;
+            vertical-align: middle;
+            color: #4a2e38;
+        }
+
+        tbody tr:hover {
+            background: #fff8fa;
+        }
+
+        .muted-sub {
+            display: block;
+            font-size: 0.7rem;
+            color: #8f707a;
+            margin-top: 0.15rem;
+        }
+
+        .status-select {
+            padding: 0.3rem 0.45rem;
+            border-radius: 7px;
+            border: 1px solid #dfc0ca;
+            background: #ffffff;
+            color: #3d242d;
+            font-size: 0.74rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .status-select:focus {
+            border-color: #b96d84;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .btn-update {
+            background: #a85b74;
+            color: #ffffff;
+            border: none;
+            padding: 0.35rem 0.7rem;
+            border-radius: 7px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-update:hover {
+            background: #924960;
+        }
+
+        .btn-delete {
+            background: #d94e6a;
+            color: #ffffff;
+            border: none;
+            padding: 0.35rem 0.7rem;
+            border-radius: 7px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-delete:hover {
+            background: #be3b56;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/admin/dashboard" class="brand">Golden Moments Admin Panel</a>
+        <a href="/admin" class="logout-btn">Logout</a>
+    </header>
+
+    <div class="page-heading">
+        <div class="eyebrow">Administration</div>
+        <h1>Manage Event Reservations &amp; Payments</h1>
+    </div>
+
+    <div class="container">
+        <div class="panel-card">
+            <div class="panel-top">
+                <h2>All Bookings</h2>
+                <div id="toastMsg" class="toast-msg"></div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Event &amp; Area</th>
+                            <th>Date &amp; Time</th>
+                            <th>Guests</th>
+                            <th>Package &amp; Cost</th>
+                            <th>Payment Status</th>
+                            <th>Booking Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsBody">
+                        <tr th:if="${#lists.isEmpty(bookings)}">
+                            <td colspan="9" style="text-align:center; color:#8f707a; padding:1.2rem;">
+                                No bookings found in the database yet.
+                            </td>
+                        </tr>
+
+                        <tr th:each="b : ${bookings}" th:attr="data-id='#' + ${b.id}">
+                            <td><strong th:text="'#' + ${b.id}">#1</strong></td>
+                            <td>
+                                <strong th:text="${b.customerName}">Guest Customer</strong>
+                                <span class="muted-sub" th:text="${b.customerEmail}">guest@gmail.com</span>
+                            </td>
+                            <td>
+                                <span th:text="${b.eventType}">Wedding</span>
+                                <span class="muted-sub" th:text="'Area: ' + ${b.venueArea}">Area: Pool Area</span>
+                            </td>
+                            <td>
+                                <span th:text="${b.eventDate}">2026-12-22</span>
+                                <span class="muted-sub" th:text="${b.timeSlot}">06:00 PM - 11:00 PM</span>
+                            </td>
+                            <td th:text="${b.guests}">80</td>
+                            <td>
+                                <span th:text="${b.packageType}">Classic Package</span>
+                                <span class="muted-sub">Pending Quote</span>
+                            </td>
+                            <td>
+                                <select class="status-select payment-select">
+                                    <option value="Unpaid" th:selected="${b.paymentStatus == 'Unpaid'}">Unpaid</option>
+                                    <option value="Paid" th:selected="${b.paymentStatus == 'Paid'}">Paid</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="status-select booking-select">
+                                    <option value="Pending" th:selected="${b.bookingStatus == 'Pending'}">Pending</option>
+                                    <option value="Approved" th:selected="${b.bookingStatus == 'Approved'}">Approved</option>
+                                    <option value="Completed" th:selected="${b.bookingStatus == 'Completed'}">Completed</option>
+                                </select>
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <button type="button" class="btn-update" onclick="updateRow(this)">Update</button>
+                                    <button type="button" class="btn-delete" onclick="deleteRow(this)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('toastMsg');
+            toast.textContent = message;
+            toast.style.display = 'inline-block';
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2600);
+        }
+
+        function updateRow(btn) {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            const payment = row.querySelector('.payment-select').value;
+            const status = row.querySelector('.booking-select').value;
+            showToast(`Updated ${id}: Payment = ${payment}, Status = ${status}`);
+        }
+
+        function deleteRow(btn) {
+            const row = btn.closest('tr');
+            const id = row.dataset.id;
+            row.remove();
+            showToast(`Deleted booking ${id}`);
+        }
+    </script>
+</body>
+</html>
