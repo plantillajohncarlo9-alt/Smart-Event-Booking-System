@@ -221,6 +221,24 @@
             background: #ffffff;
         }
 
+        .time-range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .time-range-row input[type="time"] {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .time-sep {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #7a4b5a;
+            flex-shrink: 0;
+        }
+
         .btn-submit {
             margin-top: 1.3rem;
             background: linear-gradient(135deg, #c67d93 0%, #a95e76 100%);
@@ -300,7 +318,7 @@
 
     <div class="page-title">
         <h1>Book your special event</h1>
-        <p>Choose your celebration type and venue area, check date &amp; time slot availability, and view your reservation status.</p>
+        <p>Choose your celebration type and venue area, pick your preferred date &amp; time, and view your reservation status.</p>
     </div>
 
     <div class="container">
@@ -381,13 +399,13 @@
                         <input type="date" id="eventDate" required>
                     </div>
                     <div class="field-group">
-                        <label for="timeSlot">Time slot</label>
-                        <select id="timeSlot" required>
-                            <option value="">Select time slot</option>
-                            <option value="08:00 AM - 01:00 PM">08:00 AM - 01:00 PM</option>
-                            <option value="02:00 PM - 07:00 PM">02:00 PM - 07:00 PM</option>
-                            <option value="06:00 PM - 11:00 PM">06:00 PM - 11:00 PM</option>
-                        </select>
+                        <label for="startTime">Start &amp; End time</label>
+                        <div class="time-range-row">
+                            <input type="time" id="startTime" name="startTime" required>
+                            <span class="time-sep">to</span>
+                            <input type="time" id="endTime" name="endTime" required>
+                        </div>
+                        <input type="hidden" id="timeSlot" name="timeSlot">
                     </div>
                     <div class="field-group">
                         <label for="guests">Number of guests</label>
@@ -405,7 +423,7 @@
 
                 <button type="submit" class="btn-submit">Submit reservation request</button>
                 <div id="dupAlert" class="alert-dup">
-                    Conflict detected: May naka-book na sa napiling Venue Area, Date, at Time Slot. Pumili ng ibang slot o petsa.
+                    Conflict detected: May naka-book na sa napiling Venue Area, Date, at Time Slot. Pumili ng ibang oras o petsa.
                 </div>
             </form>
         </div>
@@ -445,6 +463,34 @@
             document.getElementById(inputId).value = cardEl.dataset.value;
         }
 
+        function formatTo12Hour(time24) {
+            if (!time24) return '';
+            const [hourStr, minute] = time24.split(':');
+            let hour = parseInt(hourStr, 10);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            hour = hour % 12 || 12;
+            return `${String(hour).padStart(2, '0')}:${minute} ${ampm}`;
+        }
+
+        function buildTimeSlot() {
+            const startVal = document.getElementById('startTime').value;
+            const endVal = document.getElementById('endTime').value;
+
+            if (!startVal || !endVal) {
+                alert('Paki-pili ang Start Time at End Time.');
+                return null;
+            }
+
+            if (startVal >= endVal) {
+                alert('Ang End Time ay dapat mas huli kaysa sa Start Time.');
+                return null;
+            }
+
+            const formatted = `${formatTo12Hour(startVal)} - ${formatTo12Hour(endVal)}`;
+            document.getElementById('timeSlot').value = formatted;
+            return formatted;
+        }
+
         function appendBookingRow(b) {
             const emptyRow = document.getElementById('emptyRow');
             if (emptyRow) emptyRow.remove();
@@ -468,11 +514,14 @@
             const alertBox = document.getElementById('dupAlert');
             alertBox.style.display = 'none';
 
+            const timeSlot = buildTimeSlot();
+            if (!timeSlot) return;
+
             const payload = {
                 eventType: document.getElementById('eventType').value,
                 venueArea: document.getElementById('venueArea').value,
                 eventDate: document.getElementById('eventDate').value,
-                timeSlot: document.getElementById('timeSlot').value,
+                timeSlot: timeSlot,
                 guests: parseInt(document.getElementById('guests').value, 10),
                 packageType: document.getElementById('packageType').value
             };
@@ -497,6 +546,8 @@
             appendBookingRow(saved);
 
             document.getElementById('eventDate').value = '';
+            document.getElementById('startTime').value = '';
+            document.getElementById('endTime').value = '';
             document.getElementById('timeSlot').value = '';
             document.getElementById('guests').value = '';
         }
