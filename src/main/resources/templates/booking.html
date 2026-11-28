@@ -41,6 +41,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
         .brand-dot {
@@ -90,6 +91,90 @@
             max-width: 820px;
             margin: 0 auto;
             padding: 0 1rem;
+        }
+
+        /* Auth Box */
+        .auth-card {
+            max-width: 460px;
+            margin: 0 auto 1.5rem;
+            background: #fffdfd;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 14px 36px rgba(138, 74, 95, 0.12);
+            border: 1px solid #f3dce3;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0 1.15rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.62rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f6e2e9;
+            color: #5e3e49;
+        }
+
+        .auth-tab.active {
+            background: #a95e76;
+            color: #ffffff;
+        }
+
+        .auth-field {
+            margin-bottom: 0.9rem;
+        }
+
+        .auth-field label {
+            display: block;
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: #5e3e49;
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-field input {
+            width: 100%;
+            padding: 0.7rem 0.85rem;
+            border-radius: 10px;
+            border: 1px solid #e5c9d2;
+            background: #fdf8fa;
+            color: #3d242d;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .auth-field input:focus {
+            border-color: #b96d84;
+            background: #ffffff;
+        }
+
+        .alert-error {
+            background: #fde8ee;
+            border: 1px solid #e6a8ba;
+            color: #8f2d4c;
+            padding: 0.7rem 0.9rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background: #eef9f1;
+            border: 1px solid #a8dfc0;
+            color: #266b43;
+            padding: 0.7rem 0.9rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
         }
 
         .card {
@@ -306,155 +391,239 @@
 <body>
 
     <header>
-        <div class="brand">
+        <a href="/" class="brand">
             <span class="brand-dot"></span>
             Golden Moments
-        </div>
+        </a>
         <div class="header-right">
-            <span>Plan &bull; Book &bull; Celebrate</span>
-            <a href="/" class="logout-btn">Log out</a>
+            <span th:if="${customerName}" th:text="'Signed in as ' + ${customerName}">Plan &bull; Book &bull; Celebrate</span>
+            <span th:unless="${customerName}">Plan &bull; Book &bull; Celebrate</span>
+            <a th:if="${authenticated}" href="/logout" class="logout-btn">Log out</a>
+            <a th:unless="${authenticated}" href="/" class="logout-btn">Home</a>
         </div>
     </header>
 
     <div class="page-title">
-        <h1>Book your special event</h1>
-        <p>Choose your celebration type and venue area, pick your preferred date &amp; time, and view your reservation status.</p>
+        <h1 th:if="${authenticated}">Book your special event</h1>
+        <p th:if="${authenticated}">Choose your celebration type and venue area, pick your preferred date &amp; time, and view your reservation status.</p>
+        <h1 th:unless="${authenticated}">Customer Account</h1>
+        <p th:unless="${authenticated}">Log in or create an account first before accessing event booking.</p>
     </div>
 
     <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h2>Event booking form</h2>
-                <p>Select your options below and submit your reservation request.</p>
+        <!-- Customer Log In / Create Account Card (shown when not authenticated) -->
+        <div th:unless="${authenticated}" class="auth-card">
+            <div class="card-header" style="margin-bottom:0.5rem;">
+                <h2 id="authHeading">Customer Log In</h2>
+                <p id="authSubtext">Sign in with your registered email or username.</p>
             </div>
 
-            <form id="bookingForm" onsubmit="submitBooking(event)">
-                <div class="sub-label">Choose Event Type</div>
-                <div class="sub-hint">Select the occasion you are celebrating.</div>
+            <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
+            <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
 
-                <input type="hidden" id="eventType" value="Wedding">
-                <div class="event-grid" id="eventTypeGroup">
-                    <div class="option-card selected" data-value="Wedding" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=500&q=75" alt="Wedding">
-                        <div class="option-title">Wedding</div>
-                        <div class="option-desc">Elegant wedding celebrations</div>
-                    </div>
-                    <div class="option-card" data-value="Birthday" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=500&q=75" alt="Birthday">
-                        <div class="option-title">Birthday</div>
-                        <div class="option-desc">Joyful birthday gatherings</div>
-                    </div>
-                    <div class="option-card" data-value="Debut" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=500&q=75" alt="Debut">
-                        <div class="option-title">Debut</div>
-                        <div class="option-desc">Milestone 18th &amp; coming-of-age</div>
-                    </div>
-                    <div class="option-card" data-value="Anniversary" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=500&q=75" alt="Anniversary">
-                        <div class="option-title">Anniversary</div>
-                        <div class="option-desc">Romantic milestone dinners</div>
-                    </div>
-                    <div class="option-card" data-value="Corporate Event" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=500&q=75" alt="Corporate Event">
-                        <div class="option-title">Corporate Event</div>
-                        <div class="option-desc">Seminars, galas &amp; company events</div>
-                    </div>
-                    <div class="option-card" data-value="Other" onclick="selectOption('eventTypeGroup', 'eventType', this)">
-                        <img src="https://images.unsplash.com/photo-1478146896981-b80fe463b330?auto=format&fit=crop&w=500&q=75" alt="Other">
-                        <div class="option-title">Other</div>
-                        <div class="option-desc">Custom special occasions</div>
-                    </div>
+            <div class="auth-tabs">
+                <button type="button" id="btnTabLogin" class="auth-tab"
+                        th:classappend="${authMode != 'register'} ? ' active' : ''"
+                        onclick="switchAuthForm('login')">Log In</button>
+                <button type="button" id="btnTabRegister" class="auth-tab"
+                        th:classappend="${authMode == 'register'} ? ' active' : ''"
+                        onclick="switchAuthForm('register')">Create Account</button>
+            </div>
+
+            <form id="loginForm" action="/login" method="post"
+                  th:style="${authMode == 'register'} ? 'display:none;' : 'display:block;'">
+                <div class="auth-field">
+                    <label for="identifier">Email or Username</label>
+                    <input type="text" id="identifier" name="identifier" placeholder="Enter registered email or username" required>
                 </div>
-
-                <div class="sub-label">Choose Venue Area</div>
-                <div class="sub-hint">Pick from our available event spaces.</div>
-
-                <input type="hidden" id="venueArea" value="Pool Area">
-                <div class="venue-grid" id="venueAreaGroup">
-                    <div class="option-card selected" data-value="Pool Area" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
-                        <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=75" alt="Pool Area">
-                        <div class="option-title">Pool Area</div>
-                        <div class="option-desc">Refreshing poolside celebrations</div>
-                    </div>
-                    <div class="option-card" data-value="Garden" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
-                        <img src="https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=75" alt="Garden">
-                        <div class="option-title">Garden</div>
-                        <div class="option-desc">Lush outdoor garden surroundings</div>
-                    </div>
-                    <div class="option-card" data-value="Grand Ballroom" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
-                        <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=75" alt="Grand Ballroom">
-                        <div class="option-title">Grand Ballroom</div>
-                        <div class="option-desc">Spacious indoor banquet hall</div>
-                    </div>
-                    <div class="option-card" data-value="Function Room" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
-                        <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=75" alt="Function Room">
-                        <div class="option-title">Function Room</div>
-                        <div class="option-desc">Intimate &amp; private gatherings</div>
-                    </div>
+                <div class="auth-field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
                 </div>
+                <button type="submit" class="btn-submit" style="width:100%;">Log In</button>
+            </form>
 
-                <div class="fields-grid">
-                    <div class="field-group">
-                        <label for="eventDate">Event date</label>
-                        <input type="date" id="eventDate" required>
-                    </div>
-                    <div class="field-group">
-                        <label for="startTime">Start &amp; End time</label>
-                        <div class="time-range-row">
-                            <input type="time" id="startTime" name="startTime" required>
-                            <span class="time-sep">to</span>
-                            <input type="time" id="endTime" name="endTime" required>
-                        </div>
-                        <input type="hidden" id="timeSlot" name="timeSlot">
-                    </div>
-                    <div class="field-group">
-                        <label for="guests">Number of guests</label>
-                        <input type="number" id="guests" placeholder="e.g. 100" min="1" required>
-                    </div>
-                    <div class="field-group">
-                        <label for="packageType">Package &amp; Type</label>
-                        <select id="packageType" required>
-                            <option value="Classic Package">Classic Package</option>
-                            <option value="Gold Celebration Package">Gold Celebration Package</option>
-                            <option value="Grand All-In Package">Grand All-In Package</option>
-                        </select>
-                    </div>
+            <form id="registerForm" action="/register" method="post"
+                  th:style="${authMode == 'register'} ? 'display:block;' : 'display:none;'">
+                <div class="auth-field">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" placeholder="Full Name" required>
                 </div>
-
-                <button type="submit" class="btn-submit">Submit reservation request</button>
-                <div id="dupAlert" class="alert-dup">
-                    Conflict detected: May naka-book na sa napiling Venue Area, Date, at Time Slot. Pumili ng ibang oras o petsa.
+                <div class="auth-field">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required>
                 </div>
+                <div class="auth-field">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="customer@gmail.com" required>
+                </div>
+                <div class="auth-field">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" placeholder="09XXXXXXXXX" required>
+                </div>
+                <div class="auth-field">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" name="password" placeholder="Create password" required>
+                </div>
+                <button type="submit" class="btn-submit" style="width:100%;">Create Account</button>
             </form>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h2>My booking summary &amp; status</h2>
-                <p>Track your submitted event reservations.</p>
+        <!-- Booking Form & Summary (shown only when authenticated) -->
+        <div th:if="${authenticated}">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Event booking form</h2>
+                    <p>Select your options below and submit your reservation request.</p>
+                </div>
+
+                <form id="bookingForm" onsubmit="submitBooking(event)">
+                    <div class="sub-label">Choose Event Type</div>
+                    <div class="sub-hint">Select the occasion you are celebrating.</div>
+
+                    <input type="hidden" id="eventType" value="Wedding">
+                    <div class="event-grid" id="eventTypeGroup">
+                        <div class="option-card selected" data-value="Wedding" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=500&q=75" alt="Wedding">
+                            <div class="option-title">Wedding</div>
+                            <div class="option-desc">Elegant wedding celebrations</div>
+                        </div>
+                        <div class="option-card" data-value="Birthday" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=500&q=75" alt="Birthday">
+                            <div class="option-title">Birthday</div>
+                            <div class="option-desc">Joyful birthday gatherings</div>
+                        </div>
+                        <div class="option-card" data-value="Debut" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=500&q=75" alt="Debut">
+                            <div class="option-title">Debut</div>
+                            <div class="option-desc">Milestone 18th &amp; coming-of-age</div>
+                        </div>
+                        <div class="option-card" data-value="Anniversary" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=500&q=75" alt="Anniversary">
+                            <div class="option-title">Anniversary</div>
+                            <div class="option-desc">Romantic milestone dinners</div>
+                        </div>
+                        <div class="option-card" data-value="Corporate Event" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=500&q=75" alt="Corporate Event">
+                            <div class="option-title">Corporate Event</div>
+                            <div class="option-desc">Seminars, galas &amp; company events</div>
+                        </div>
+                        <div class="option-card" data-value="Other" onclick="selectOption('eventTypeGroup', 'eventType', this)">
+                            <img src="https://images.unsplash.com/photo-1478146896981-b80fe463b330?auto=format&fit=crop&w=500&q=75" alt="Other">
+                            <div class="option-title">Other</div>
+                            <div class="option-desc">Custom special occasions</div>
+                        </div>
+                    </div>
+
+                    <div class="sub-label">Choose Venue Area</div>
+                    <div class="sub-hint">Pick from our available event spaces.</div>
+
+                    <input type="hidden" id="venueArea" value="Pool Area">
+                    <div class="venue-grid" id="venueAreaGroup">
+                        <div class="option-card selected" data-value="Pool Area" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
+                            <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=75" alt="Pool Area">
+                            <div class="option-title">Pool Area</div>
+                            <div class="option-desc">Refreshing poolside celebrations</div>
+                        </div>
+                        <div class="option-card" data-value="Garden" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
+                            <img src="https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=75" alt="Garden">
+                            <div class="option-title">Garden</div>
+                            <div class="option-desc">Lush outdoor garden surroundings</div>
+                        </div>
+                        <div class="option-card" data-value="Grand Ballroom" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
+                            <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=600&q=75" alt="Grand Ballroom">
+                            <div class="option-title">Grand Ballroom</div>
+                            <div class="option-desc">Spacious indoor banquet hall</div>
+                        </div>
+                        <div class="option-card" data-value="Function Room" onclick="selectOption('venueAreaGroup', 'venueArea', this)">
+                            <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=75" alt="Function Room">
+                            <div class="option-title">Function Room</div>
+                            <div class="option-desc">Intimate &amp; private gatherings</div>
+                        </div>
+                    </div>
+
+                    <div class="fields-grid">
+                        <div class="field-group">
+                            <label for="eventDate">Event date</label>
+                            <input type="date" id="eventDate" required>
+                        </div>
+                        <div class="field-group">
+                            <label for="startTime">Start &amp; End time</label>
+                            <div class="time-range-row">
+                                <input type="time" id="startTime" name="startTime" required>
+                                <span class="time-sep">to</span>
+                                <input type="time" id="endTime" name="endTime" required>
+                            </div>
+                            <input type="hidden" id="timeSlot" name="timeSlot">
+                        </div>
+                        <div class="field-group">
+                            <label for="guests">Number of guests</label>
+                            <input type="number" id="guests" placeholder="e.g. 100" min="1" required>
+                        </div>
+                        <div class="field-group">
+                            <label for="packageType">Package &amp; Type</label>
+                            <select id="packageType" required>
+                                <option value="Classic Package">Classic Package</option>
+                                <option value="Gold Celebration Package">Gold Celebration Package</option>
+                                <option value="Grand All-In Package">Grand All-In Package</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Submit reservation request</button>
+                    <div id="dupAlert" class="alert-dup">
+                        Conflict detected: May naka-book na sa napiling Venue Area, Date, at Time Slot. Pumili ng ibang oras o petsa.
+                    </div>
+                </form>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Event &amp; Venue Area</th>
-                        <th>Date &amp; Time</th>
-                        <th>Guests</th>
-                        <th>Package &amp; Type</th>
-                        <th>Booking Status</th>
-                    </tr>
-                </thead>
-                <tbody id="summaryBody">
-                    <tr id="emptyRow">
-                        <td colspan="5" style="color:#967781; text-align:center;">No bookings submitted yet.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="card">
+                <div class="card-header">
+                    <h2>My booking summary &amp; status</h2>
+                    <p>Track your submitted event reservations.</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event &amp; Venue Area</th>
+                            <th>Date &amp; Time</th>
+                            <th>Guests</th>
+                            <th>Package &amp; Type</th>
+                            <th>Booking Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryBody">
+                        <tr id="emptyRow">
+                            <td colspan="5" style="color:#967781; text-align:center;">No bookings submitted yet.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script th:inline="javascript">
         const existingBookings = /*[[${bookings}]]*/ [];
+
+        function switchAuthForm(mode) {
+            const isLogin = mode === 'login';
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const btnLogin = document.getElementById('btnTabLogin');
+            const btnRegister = document.getElementById('btnTabRegister');
+            const heading = document.getElementById('authHeading');
+            const subtext = document.getElementById('authSubtext');
+
+            if (loginForm) loginForm.style.display = isLogin ? 'block' : 'none';
+            if (registerForm) registerForm.style.display = isLogin ? 'none' : 'block';
+            if (btnLogin) btnLogin.classList.toggle('active', isLogin);
+            if (btnRegister) btnRegister.classList.toggle('active', !isLogin);
+            if (heading) heading.textContent = isLogin ? 'Customer Log In' : 'Create Account';
+            if (subtext) subtext.textContent = isLogin
+                ? 'Sign in with your registered email or username.'
+                : 'Register your account first, then log in to book.';
+        }
 
         function selectOption(groupId, inputId, cardEl) {
             const group = document.getElementById(groupId);
@@ -496,6 +665,7 @@
             if (emptyRow) emptyRow.remove();
 
             const tbody = document.getElementById('summaryBody');
+            if (!tbody) return;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${b.eventType}</strong><br><small style="color:#8b6c76;">${b.venueArea}</small></td>
@@ -531,6 +701,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
+
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
 
             if (response.status === 409) {
                 alertBox.style.display = 'block';
