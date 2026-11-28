@@ -70,21 +70,19 @@ classDiagram
     }
 
     class HomeController {
-        -String SESSION_USER
         -BookingRepository bookingRepository
         -CustomerUserRepository customerUserRepository
         +home() String
-        +loginPage(String, String, String, Model) String
-        +login(String, String, String, HttpSession, Model) String
+        +loginPage(...) String
+        +login(...) String
         +registerPage(Model) String
-        +register(String, String, String, String, String, Model) String
+        +register(...) String
         +logout(HttpSession) String
         +bookingPage(HttpSession, Model) String
         +createBooking(Booking, HttpSession) ResponseEntity~?~
         +adminLoginPage() String
-        +adminLogin(String, String) String
         +adminDashboard(Model) String
-        +updateBookingStatus(Long, String, String) ResponseEntity~String~
+        +updateBookingStatus(...) ResponseEntity~String~
         +deleteBooking(Long) ResponseEntity~String~
     }
 
@@ -95,12 +93,6 @@ classDiagram
         -String email
         -String phone
         -String password
-        +getId() Long
-        +getFullName() String
-        +getUsername() String
-        +getEmail() String
-        +getPhone() String
-        +getPassword() String
     }
 
     class Booking {
@@ -119,23 +111,23 @@ classDiagram
 
     class CustomerUserRepository {
         <<interface>>
-        +findByEmailIgnoreCaseOrUsernameIgnoreCase(String email, String username) Optional~CustomerUser~
-        +existsByEmailIgnoreCase(String email) boolean
-        +existsByUsernameIgnoreCase(String username) boolean
+        +findByEmailIgnoreCaseOrUsernameIgnoreCase(String, String) Optional~CustomerUser~
+        +existsByEmailIgnoreCase(String) boolean
+        +existsByUsernameIgnoreCase(String) boolean
     }
 
     class BookingRepository {
         <<interface>>
         +findAllByOrderByIdDesc() List~Booking~
-        +existsByVenueAreaAndEventDateAndTimeSlot(String venueArea, String eventDate, String timeSlot) boolean
+        +existsByVenueAreaAndEventDateAndTimeSlot(String, String, String) boolean
     }
 
-    HomeController --> CustomerUserRepository : injects
-    HomeController --> BookingRepository : injects
-    HomeController ..> CustomerUser : authenticates & registers
-    HomeController ..> Booking : creates & updates
-    CustomerUserRepository --> CustomerUser : manages
-    BookingRepository --> Booking : manages
+    HomeController --> CustomerUserRepository : uses
+    HomeController --> BookingRepository : uses
+    HomeController ..> CustomerUser : authenticates/registers
+    HomeController ..> Booking : creates/updates
+    CustomerUserRepository ..> CustomerUser : manages
+    BookingRepository ..> Booking : managesges
 
 ```
 
